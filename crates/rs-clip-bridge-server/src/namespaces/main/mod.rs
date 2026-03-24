@@ -21,7 +21,7 @@ use self::internals::{
     extract_channel_id_from_connection,
 };
 use super::super::WS_IO_SERVER;
-use crate::APP_CONFIG;
+use crate::SERVER_CONFIG;
 
 // Constants/Statics
 pub static MAIN: LazyLock<Arc<WsIoServerNamespace>> = LazyLock::new(|| {
@@ -40,7 +40,9 @@ async fn init_response_handler(
     data: Option<(Option<String>, String)>,
 ) -> Result<()> {
     let (auth_key, channel_id) = data.ok_or_else(|| anyhow!("Invalid init response data"))?;
-    let config = APP_CONFIG.get().ok_or_else(|| anyhow!("App config not initialized"))?;
+    let config = SERVER_CONFIG
+        .get()
+        .ok_or_else(|| anyhow!("Server config not initialized"))?;
 
     if let Some(ref required_key) = config.auth_key {
         if auth_key.as_ref() != Some(required_key) {

@@ -40,15 +40,15 @@ mod namespaces;
 use self::{
     cli::Cli,
     config::{
-        AppConfig,
-        confique_app_config_layer::AppConfigLayer,
+        ServerConfig,
+        confique_server_config_layer::ServerConfigLayer,
     },
 };
 
 // Constants/Statics
-static APP_CONFIG: OnceLock<AppConfig> = OnceLock::new();
 static APP_SHUTDOWN_TOKEN: LazyLock<CancellationToken> = LazyLock::new(CancellationToken::new);
 static APP_TASK_MANAGER: LazyLock<TaskManager> = LazyLock::new(TaskManager::new);
+static SERVER_CONFIG: OnceLock<ServerConfig> = OnceLock::new();
 pub static WS_IO_SERVER: LazyLock<WsIoServer> =
     LazyLock::new(|| WsIoServer::builder().packet_codec(WsIoPacketCodec::Postcard).build());
 
@@ -63,8 +63,8 @@ pub fn shutdown() {
 }
 
 async fn start_server(cancel_token: CancellationToken) -> Result<()> {
-    let Some(config) = APP_CONFIG.get() else {
-        bail!("Failed to get app config");
+    let Some(config) = SERVER_CONFIG.get() else {
+        bail!("Failed to get server config");
     };
 
     let server_addr = format!("{}:{}", &config.host, &config.port);
@@ -93,13 +93,13 @@ async fn main() -> Result<()> {
 
     // Parse cli and merge config
     let cli = Cli::parse();
-    let cli_config_layer = AppConfigLayer {
+    let cli_config_layer = ServerConfigLayer {
         auth_key: cli.auth_key,
         host: cli.host,
         port: cli.port,
     };
 
-    let mut config_builder = AppConfig::builder().preloaded(cli_config_layer);
+    let mut config_builder = ServerConfig::builder().preloaded(cli_config_layer);
 
     if let Some(path) = cli.config {
         config_builder = config_builder.file(path);
@@ -110,9 +110,9 @@ async fn main() -> Result<()> {
         .map_err(|e| anyhow!("Configuration load failed: {}", e))?;
 
     // Set config
-    APP_CONFIG
+    SERVER_CONFIG
         .set(config)
-        .map_err(|_| anyhow!("Failed to set app config"))?;
+        .map_err(|_| anyhow!("Failed to set server config"))?;
 
     // Run server and register signal handler
     APP_TASK_MANAGER.spawn_with_token(move |token| async {
