@@ -33,6 +33,7 @@ use wsio_server::{
 };
 
 mod cli;
+mod clipboard;
 mod config;
 mod namespaces;
 
