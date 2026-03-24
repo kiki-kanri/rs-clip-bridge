@@ -1,0 +1,42 @@
+[package]
+name = "rs-clip-bridge-server"
+version = "0.1.0"
+
+authors.workspace = true
+categories.workspace = true
+description = ""
+edition.workspace = true
+homepage.workspace = true
+include = [
+  "Cargo.toml",
+  "README.md",
+  "src/**/*",
+]
+
+keywords.workspace = true
+license.workspace = true
+readme = "./README.md"
+repository.workspace = true
+
+# Dependencies
+[dependencies]
+anyhow = "1.0.102"
+axum = "0.8.8"
+clap = { version = "4.6.0", features = ["derive", "env"] }
+confique = { version = "0.4.0", features = ["toml"] }
+kikiutils = { version = "0.7.2", features = ["signal", "task", "tracing"] }
+serde = { version = "1.0.228", features = ["derive"] }
+tokio = { version = "1.50.0", features = ["rt-multi-thread"] }
+tokio-util = "0.7.18"
+tracing = "0.1.44"
+tracing-subscriber = "0.3.23"
+wsio-server = { version = "0.12.0", features = ["connection-extensions", "tower", "packet-codec-postcard"] }
+
+# Features
+[features]
+## Define features
+
+## Default and alias
+default = []
+all = []
+full = ["all"]
