@@ -1,9 +1,9 @@
 name: Test and upload coverage on release
 
 on:
-  # push:
-  #   tags:
-  #     - v*
+  push:
+    tags:
+      - v*
   workflow_dispatch: null
 
 jobs:
