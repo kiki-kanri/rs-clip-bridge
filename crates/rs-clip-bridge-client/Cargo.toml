@@ -4,7 +4,7 @@ version = "0.1.0"
 
 authors.workspace = true
 categories.workspace = true
-description = ""
+description = "Cross-platform clipboard sync client for rs-clip-bridge. Monitors local clipboard changes and synchronizes them with a remote server via WebSockets. All clipboard data is encrypted using ChaCha20-Poly1305."
 edition.workspace = true
 homepage.workspace = true
 include = [

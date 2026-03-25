@@ -4,7 +4,7 @@ version = "0.1.0"
 
 authors.workspace = true
 categories.workspace = true
-description = ""
+description = "Shared types for rs-clip-bridge client and server."
 edition.workspace = true
 homepage.workspace = true
 include = [
