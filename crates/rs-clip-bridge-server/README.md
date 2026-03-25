@@ -45,10 +45,19 @@ docker build -t rs-clip-bridge-server -f crates/rs-clip-bridge-server/Dockerfile
 docker run -d \
   --name rs-clip-bridge-server \
   -p 8000:8000 \
-  -e RS_CLIP_AUTH_KEYS=key1,key2 \
+  -e RS_CLIP_AUTH_KEYS=***,*** \
   -e RS_CLIP_SERVER_HOST=0.0.0.0 \
   -e RS_CLIP_SERVER_PORT=8000 \
   rs-clip-bridge-server
+```
+
+### GitHub Actions
+
+Pre-built binaries are available from the [Auto compile workflow](https://github.com/kiki-kanri/rs-clip-bridge/actions/workflows/auto-compile.yaml):
+
+```bash
+# Download from workflow artifacts
+# Select a run → Artifacts → download bin-<target>
 ```
 
 ## Usage

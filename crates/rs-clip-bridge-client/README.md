@@ -38,6 +38,15 @@ cargo install rs-clip-bridge-client
 cargo b -r -p rs-clip-bridge-client
 ```
 
+### GitHub Actions
+
+Pre-built binaries are available from the [Auto compile workflow](https://github.com/kiki-kanri/rs-clip-bridge/actions/workflows/auto-compile.yaml):
+
+```bash
+# Download from workflow artifacts
+# Select a run → Artifacts → download bin-<target>
+```
+
 ## Usage
 
 ### Quick Start
