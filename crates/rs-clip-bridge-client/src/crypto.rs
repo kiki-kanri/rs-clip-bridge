@@ -61,3 +61,130 @@ pub fn decrypt(key: &Key, nonce: &[u8], content_with_tag: &[u8]) -> Result<Vec<u
         .decrypt(nonce, content_with_tag)
         .map_err(|e| anyhow!("Decryption failed: {}", e))
 }
+
+// ================================================================================================
+// Tests
+// ================================================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const VALID_KEY: &str = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+
+    #[test]
+    fn parse_key_valid() {
+        let key = parse_key(VALID_KEY).unwrap();
+        // Key is 32 bytes (256 bits for ChaCha20)
+        let bytes: &[u8] = key.as_ref();
+        assert_eq!(bytes.len(), 32);
+    }
+
+    #[test]
+    fn parse_key_too_short() {
+        let err = parse_key("abc123").unwrap_err();
+        assert!(err.to_string().contains("64 hex characters"));
+    }
+
+    #[test]
+    fn parse_key_too_long() {
+        let err = parse_key(&"a".repeat(65)).unwrap_err();
+        assert!(err.to_string().contains("64 hex characters"));
+    }
+
+    #[test]
+    fn parse_key_invalid_hex() {
+        let err = parse_key(&"g".repeat(64)).unwrap_err();
+        // hex crate returns "Invalid character 'g'" for non-hex input
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Invalid") || msg.contains("Odd") || msg.contains("Hex"),
+            "unexpected error: {}",
+            msg
+        );
+    }
+
+    #[test]
+    fn encrypt_decrypt_roundtrip() {
+        let key = parse_key(VALID_KEY).unwrap();
+        let plaintext = b"Hello, World! \xe4\xbd\xa0\xe5\xa5\xbd"; // "你好" in UTF-8
+
+        let (nonce, ciphertext) = encrypt(&key, plaintext).unwrap();
+        assert_eq!(nonce.len(), 12);
+        assert!(!ciphertext.is_empty());
+
+        let decrypted = decrypt(&key, &nonce, &ciphertext).unwrap();
+        assert_eq!(decrypted, plaintext);
+    }
+
+    #[test]
+    fn encrypt_produces_different_nonces() {
+        let key = parse_key(VALID_KEY).unwrap();
+        let plaintext = b"Hello";
+
+        let (_, ct1) = encrypt(&key, plaintext).unwrap();
+        let (_, ct2) = encrypt(&key, plaintext).unwrap();
+
+        // Same plaintext, different nonces -> different ciphertext
+        assert_ne!(ct1, ct2);
+    }
+
+    #[test]
+    fn decrypt_wrong_key_fails() {
+        let key1 = parse_key(VALID_KEY).unwrap();
+        let key2 = parse_key("1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100").unwrap();
+
+        let (nonce, ciphertext) = encrypt(&key1, b"secret").unwrap();
+
+        let err = decrypt(&key2, &nonce, &ciphertext).unwrap_err();
+        assert!(err.to_string().contains("Decryption failed"));
+    }
+
+    #[test]
+    fn decrypt_invalid_tag_fails() {
+        let key = parse_key(VALID_KEY).unwrap();
+        let (nonce, mut ciphertext) = encrypt(&key, b"secret").unwrap();
+
+        // Corrupt the tag (last 16 bytes of content_with_tag)
+        let len = ciphertext.len();
+        ciphertext[len - 1] ^= 0xff;
+
+        let err = decrypt(&key, &nonce, &ciphertext).unwrap_err();
+        assert!(err.to_string().contains("Decryption failed"));
+    }
+
+    #[test]
+    fn decrypt_nonce_wrong_length_fails() {
+        let key = parse_key(VALID_KEY).unwrap();
+        let (_, ciphertext) = encrypt(&key, b"hello").unwrap();
+
+        // Empty nonce
+        let err = decrypt(&key, &[], &ciphertext).unwrap_err();
+        assert!(err.to_string().contains("12 bytes"));
+
+        // Short nonce
+        let err = decrypt(&key, &[1, 2, 3], &ciphertext).unwrap_err();
+        assert!(err.to_string().contains("12 bytes"));
+    }
+
+    #[test]
+    fn encrypt_empty_plaintext() {
+        let key = parse_key(VALID_KEY).unwrap();
+        let (nonce, ciphertext) = encrypt(&key, b"").unwrap();
+        assert_eq!(nonce.len(), 12);
+        assert_eq!(ciphertext.len(), 16); // Just the Poly1305 tag
+
+        let decrypted = decrypt(&key, &nonce, &ciphertext).unwrap();
+        assert_eq!(decrypted, b"");
+    }
+
+    #[test]
+    fn encrypt_large_plaintext() {
+        let key = parse_key(VALID_KEY).unwrap();
+        let plaintext = vec![0u8; 1024 * 1024]; // 1MB
+
+        let (nonce, ciphertext) = encrypt(&key, &plaintext).unwrap();
+        let decrypted = decrypt(&key, &nonce, &ciphertext).unwrap();
+        assert_eq!(decrypted, plaintext);
+    }
+}

@@ -1656,6 +1656,7 @@ dependencies = [
 name = "rs-clip-bridge-types"
 version = "0.1.0"
 dependencies = [
+ "postcard",
  "serde",
 ]
 

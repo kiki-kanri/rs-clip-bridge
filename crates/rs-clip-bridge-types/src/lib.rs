@@ -8,7 +8,7 @@ use serde::{
 };
 
 /// Clipboard content type
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub enum ClipboardContent {
     Image(Vec<u8>),
     Text(String),
@@ -31,4 +31,67 @@ pub struct ClipboardEventData {
 
     /// Unix timestamp in milliseconds
     pub timestamp: u64,
+}
+
+// ================================================================================================
+// Tests
+// ================================================================================================
+
+#[cfg(test)]
+mod tests {
+    use postcard::{
+        from_bytes,
+        to_allocvec,
+    };
+
+    use super::*;
+
+    #[test]
+    fn clipboard_event_data_serde() {
+        let data = ClipboardEventData {
+            device_name: Some("test-device".to_string()),
+            content: vec![0xde, 0xad, 0xbe, 0xef],
+            nonce: vec![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c],
+            timestamp: 1234567890,
+        };
+
+        let encoded = to_allocvec(&data).unwrap();
+        let decoded: ClipboardEventData = from_bytes(&encoded).unwrap();
+        assert_eq!(decoded.device_name, data.device_name);
+        assert_eq!(decoded.content, data.content);
+        assert_eq!(decoded.nonce, data.nonce);
+        assert_eq!(decoded.timestamp, data.timestamp);
+    }
+
+    #[test]
+    fn clipboard_content_serde() {
+        let content = ClipboardContent::Text("Hello, World!".to_string());
+        let encoded = to_allocvec(&content).unwrap();
+        let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
+        assert_eq!(decoded, content);
+
+        let raw = ClipboardContent::Raw(vec![0xff, 0x00, 0xff]);
+        let encoded = to_allocvec(&raw).unwrap();
+        let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
+        assert_eq!(decoded, raw);
+
+        let image = ClipboardContent::Image(vec![0x89, 0x50, 0x4e]); // PNG magic
+        let encoded = to_allocvec(&image).unwrap();
+        let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
+        assert_eq!(decoded, image);
+    }
+
+    #[test]
+    fn clipboard_event_data_no_device_name() {
+        let data = ClipboardEventData {
+            device_name: None,
+            content: vec![0u8; 32],
+            nonce: vec![0u8; 12],
+            timestamp: 0,
+        };
+
+        let encoded = to_allocvec(&data).unwrap();
+        let decoded: ClipboardEventData = from_bytes(&encoded).unwrap();
+        assert_eq!(decoded.device_name, None);
+    }
 }
