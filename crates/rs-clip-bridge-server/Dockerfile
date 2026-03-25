@@ -40,6 +40,12 @@ RUN touch ./crates/rs-clip-bridge-server/src/main.rs && \
 # Runtime stage
 FROM debian:trixie-slim
 
+## Labels
+LABEL org.opencontainers.image.title="rs-clip-bridge-server"
+LABEL org.opencontainers.image.description="A blazingly fast, cross-platform clipboard synchronizer using WebSockets with end-to-end ChaCha20-Poly1305 encryption."
+LABEL org.opencontainers.image.source="https://github.com/kiki-kanri/rs-clip-bridge"
+LABEL org.opencontainers.image.licenses="MIT"
+
 ## Set envs and workdir
 ENV RS_CLIP_SERVER_HOST='0.0.0.0' \
     RS_CLIP_SERVER_PORT=8000
