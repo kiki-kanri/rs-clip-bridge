@@ -15,8 +15,8 @@ keywords = []
 license = "MIT"
 repository = "https://github.com/kiki-kanri/rs-clip-bridge"
 
-# The profile that 'dist' will build with
-[profile.dist]
+# Profiles
+[profile.release]
 codegen-units = 1
 lto = "fat"
 overflow-checks = true

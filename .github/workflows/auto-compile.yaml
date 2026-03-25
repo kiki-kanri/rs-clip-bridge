@@ -1,0 +1,51 @@
+name: Auto compile
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build for ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+
+      - name: Install musl-tools
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get install -y musl-tools
+
+      - name: Build
+        run: cargo b -r --target ${{ matrix.target }} --workspace
+
+      - name: Upload Binaries
+        uses: actions/upload-artifact@v7
+        with:
+          name: bin-${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/release/*.exe
+            target/${{ matrix.target }}/release/rs-clip-bridge-client
+            target/${{ matrix.target }}/release/rs-clip-bridge-server
+            !target/${{ matrix.target }}/release/*.d
+            !target/${{ matrix.target }}/release/deps/
+            !target/${{ matrix.target }}/release/build/
+            !target/${{ matrix.target }}/release/incremental/
