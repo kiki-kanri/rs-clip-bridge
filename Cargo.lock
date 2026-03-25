@@ -1625,6 +1625,7 @@ dependencies = [
  "kikiutils",
  "postcard",
  "rand 0.10.0",
+ "ring",
  "rs-clip-bridge-types",
  "serde",
  "tokio",
