@@ -141,6 +141,14 @@ fn load_config() -> Result<ClientConfig> {
 
 fn setup_ws_client(config: ClientConfig) -> Result<WsIoClient> {
     let client = WsIoClient::builder(config.server_url.as_ref())?
+        .on_session_close(|_| async {
+            tracing::info!("Ws.io disconnected from server");
+            Ok(())
+        })
+        .on_session_ready(|_| async {
+            tracing::info!("Ws.io connected to server");
+            Ok(())
+        })
         .packet_codec(WsIoPacketCodec::Postcard)
         .with_init_handler(move |_, _: Option<()>| {
             let cfg = config.clone();
@@ -300,7 +308,6 @@ async fn main() -> Result<()> {
     // Register event handler before connecting
     ws_client.on("event", handle_server_event);
     ws_client.connect().await;
-    tracing::info!("Connected to server");
 
     // Spawn clipboard monitor
     let (tx, rx) = unbounded_channel();
