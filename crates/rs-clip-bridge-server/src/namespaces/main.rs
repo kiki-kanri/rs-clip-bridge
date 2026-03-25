@@ -64,13 +64,15 @@ async fn init_response_handler(
     }
 
     // Set channel id
-    connection.extensions().insert(ChannelId(channel_id));
+    connection.extensions().insert(ChannelId(channel_id.clone()));
+
+    tracing::info!(channel_id = %channel_id, "Client authorized");
 
     Ok(())
 }
 
 async fn on_connect(connection: Arc<WsIoServerConnection>) -> Result<()> {
-    tracing::info!("Connected with connection id {}", connection.id());
+    tracing::info!("Connection established: id={}", connection.id());
 
     // Register events
     connection.on("event", on_event);
@@ -79,7 +81,10 @@ async fn on_connect(connection: Arc<WsIoServerConnection>) -> Result<()> {
 }
 
 async fn on_ready(connection: Arc<WsIoServerConnection>) -> Result<()> {
-    connection.join([extract_channel_id_from_connection(&connection)]);
+    let channel_id = extract_channel_id_from_connection(&connection);
+    connection.join([channel_id.clone()]);
+
+    tracing::info!(channel_id = %channel_id, "Joined channel");
 
     Ok(())
 }

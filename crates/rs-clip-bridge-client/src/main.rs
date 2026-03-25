@@ -167,11 +167,11 @@ fn load_config() -> Result<ClientConfig> {
 fn setup_ws_client(config: ClientConfig) -> Result<WsIoClient> {
     let client = WsIoClient::builder(config.server_url.as_ref())?
         .on_session_close(|_| async {
-            tracing::info!("Ws.io disconnected from server");
+            tracing::info!("Disconnected from server");
             Ok(())
         })
         .on_session_ready(|_| async {
-            tracing::info!("Ws.io connected to server");
+            tracing::info!("Connected to server");
             Ok(())
         })
         .packet_codec(WsIoPacketCodec::Postcard)
@@ -218,7 +218,7 @@ async fn handle_server_event(_: Arc<WsIoClientSession>, data: Arc<ClipboardEvent
                 .set_text(text)
                 .map_err(|e| anyhow!("Clipboard write error: {e}"))?;
 
-            tracing::debug!("Synced text clipboard from server ({} bytes)", plaintext.len());
+            tracing::info!("Received clipboard from server: {} bytes", plaintext.len());
         }
         ClipboardContent::Image(_) | ClipboardContent::Raw(_) => {
             tracing::warn!("Image/Raw clipboard not yet supported");
@@ -277,10 +277,12 @@ async fn run_clipboard_sender(mut rx: UnboundedReceiver<ClipboardContent>, clien
                 };
 
                 // Update LAST_CONTENT before sending
+                let serialized_size = serialized.len();
                 *LAST_CONTENT.write().await = serialized;
 
-                if let Err(e) = client.emit::<ClipboardEventData>("event", Some(&event_data)).await {
-                    tracing::error!("Failed to emit clipboard event: {e}");
+                match client.emit::<ClipboardEventData>("event", Some(&event_data)).await {
+                    Ok(_) => tracing::info!("Sent clipboard: {serialized_size} bytes"),
+                    Err(e) => tracing::error!("Failed to emit clipboard event: {e}"),
                 }
             }
         }
@@ -316,7 +318,7 @@ async fn main() -> Result<()> {
 
     // --- Setup ---
     let config = load_config()?;
-    tracing::debug!(
+    tracing::info!(
         channel_id = %config.channel_id,
         server_url = %config.server_url,
         "Configuration loaded"

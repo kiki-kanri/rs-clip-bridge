@@ -31,6 +31,7 @@ impl ClipboardHandler for ClipboardMonitor {
         match self.ctx.get_text() {
             Ok(text) if !text.is_empty() && text != self.last_text => {
                 self.last_text = text.clone();
+                tracing::info!("Detected clipboard change: {} chars", text.len());
                 if let Err(e) = self.tx.send(ClipboardContent::Text(text)) {
                     tracing::error!("Failed to send clipboard to channel: {e}");
                     return CallbackResult::Stop;
