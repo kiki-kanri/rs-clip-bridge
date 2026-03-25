@@ -34,17 +34,22 @@ jobs:
           toolchain: stable
           target: ${{ matrix.target }}
 
-      - name: Install cargo-zigbuild & Zig (Linux ARM only)
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          sudo apt-get update && sudo apt-get install -y zig
-          cargo install cargo-zigbuild
-
       - name: Install musl-tools
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: sudo apt-get install -y musl-tools
 
+      - name: Install Zig (For Linux ARM cross-compile)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        uses: mlugg/setup-zig@v2
+        with:
+          version: latest
+
+      - name: Install cargo-zigbuild
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: cargo install cargo-zigbuild
+
       - name: Build
+        shell: bash
         run: |
           if [ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]; then
             cargo zigbuild -r --target ${{ matrix.target }} --workspace
