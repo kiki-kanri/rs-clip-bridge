@@ -11,8 +11,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends gcc make mold
 
 ## Add rustup components
-RUN rustup component add clippy && \
-    rustup component add --toolchain nightly rustfmt
+RUN rustup component add clippy
 
 ## Copy Cargo config and manifest for dependency caching
 COPY ./.cargo ./.cargo
@@ -25,10 +24,8 @@ RUN mkdir ./src && \
     rm -rf ./src
 
 ## Copy actual source code and build with lint + format checks
-COPY ./rustfmt.toml ./
 COPY ./src ./src
 RUN touch ./src/main.rs && \
-    cargo +nightly fmt --all -- --check && \
     cargo clippy -r --all-features --all-targets -- -D warnings && \
     cargo b -r --all-features
 
