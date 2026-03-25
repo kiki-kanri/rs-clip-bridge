@@ -1,5 +1,6 @@
+#[cfg(unix)]
+use std::env::set_var;
 use std::{
-    env::set_var,
     sync::{
         Arc,
         LazyLock,
@@ -88,6 +89,7 @@ fn load_config() -> Result<ClientConfig> {
     let layer = ClientConfigLayer {
         auth_key: cli.auth_key,
         channel_id: cli.channel_id,
+        #[cfg(unix)]
         display: cli.display,
         server_url: cli.server_url,
     };
