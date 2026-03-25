@@ -1,0 +1,32 @@
+[package]
+name = "rs-clip-bridge-types"
+version = "0.1.0"
+
+authors.workspace = true
+categories.workspace = true
+description = ""
+edition.workspace = true
+homepage.workspace = true
+include = [
+  "Cargo.toml",
+  "README.md",
+  "src/**/*",
+]
+
+keywords.workspace = true
+license.workspace = true
+readme = "./README.md"
+repository.workspace = true
+
+# Dependencies
+[dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+
+# Features
+[features]
+## Define features
+
+## Default and alias
+default = []
+all = []
+full = ["all"]

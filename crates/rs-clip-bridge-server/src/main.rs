@@ -19,6 +19,7 @@ use kikiutils::{
         make_tracing_fmt_layer_with_local_time,
     },
 };
+pub use rs_clip_bridge_types as types;
 use tokio::{
     net::TcpListener,
     select,
@@ -33,7 +34,6 @@ use wsio_server::{
 };
 
 mod cli;
-mod clipboard;
 mod config;
 mod namespaces;
 
@@ -56,6 +56,31 @@ pub static WS_IO_SERVER: LazyLock<WsIoServer> =
 fn init_namespaces_and_get_tower_layer() -> WsIoServerLayer {
     namespaces::main::MAIN.path();
     WS_IO_SERVER.layer()
+}
+
+fn parse_cli_and_set_config() -> Result<ServerConfig> {
+    let cli = Cli::parse();
+    let cli_config_layer = ServerConfigLayer {
+        auth_key: cli.auth_key,
+        host: cli.host,
+        port: cli.port,
+    };
+
+    let mut config_builder = ServerConfig::builder().preloaded(cli_config_layer);
+
+    if let Some(path) = cli.config {
+        config_builder = config_builder.file(path);
+    }
+
+    let config = config_builder
+        .load()
+        .map_err(|err| anyhow!("Configuration load failed: {}", err))?;
+
+    SERVER_CONFIG
+        .set(config.clone())
+        .map_err(|_| anyhow!("Failed to set server config"))?;
+
+    Ok(config)
 }
 
 pub fn shutdown() {
@@ -91,28 +116,8 @@ async fn main() -> Result<()> {
             .with_filter(LevelFilter::INFO),
     )?;
 
-    // Parse cli and merge config
-    let cli = Cli::parse();
-    let cli_config_layer = ServerConfigLayer {
-        auth_key: cli.auth_key,
-        host: cli.host,
-        port: cli.port,
-    };
-
-    let mut config_builder = ServerConfig::builder().preloaded(cli_config_layer);
-
-    if let Some(path) = cli.config {
-        config_builder = config_builder.file(path);
-    }
-
-    let config = config_builder
-        .load()
-        .map_err(|e| anyhow!("Configuration load failed: {}", e))?;
-
-    // Set config
-    SERVER_CONFIG
-        .set(config)
-        .map_err(|_| anyhow!("Failed to set server config"))?;
+    // Load config
+    parse_cli_and_set_config()?;
 
     // Run server and register signal handler
     APP_TASK_MANAGER.spawn_with_token(move |token| async {
@@ -123,8 +128,8 @@ async fn main() -> Result<()> {
 
     APP_TASK_MANAGER.spawn_with_token(async |token| {
         select! {
-            _ = token.cancelled() => {}
-            _ = wait_for_shutdown_signal() => {}
+            _ = token.cancelled() => {},
+            _ = wait_for_shutdown_signal() => {},
         }
 
         shutdown();

@@ -1,5 +1,5 @@
 [package]
-name = "rs-clip-bridge-server"
+name = "rs-clip-bridge-client"
 version = "0.1.0"
 
 authors.workspace = true
@@ -21,8 +21,9 @@ repository.workspace = true
 # Dependencies
 [dependencies]
 anyhow = "1.0.102"
-axum = "0.8.8"
+arboard = "3.6.1"
 clap = { version = "4.6.0", features = ["derive", "env"] }
+clipboard-master = "4.0.0"
 confique = { version = "0.4.0", features = ["toml"] }
 kikiutils = { version = "0.7.2", features = ["signal", "task", "tracing"] }
 rs-clip-bridge-types = { path = "../rs-clip-bridge-types" }
@@ -31,7 +32,7 @@ tokio = { version = "1.50.0", features = ["rt-multi-thread"] }
 tokio-util = "0.7.18"
 tracing = "0.1.44"
 tracing-subscriber = "0.3.23"
-wsio-server = { version = "0.12.0", features = ["connection-extensions", "tower", "packet-codec-postcard"] }
+wsio-client = { version = "0.8.4", features = ["packet-codec-postcard", "tls-rustls-native"] }
 
 # Features
 [features]
