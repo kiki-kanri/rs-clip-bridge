@@ -69,6 +69,11 @@ jobs:
       - name: Build
         shell: bash
         run: |
+          if [[ "${{ matrix.target }}" == *"-pc-windows-msvc" ]]; then
+            export RUSTFLAGS="-C target-feature=+crt-static"
+            echo "Windows MSVC detected: Enabling static CRT linking..."
+          fi
+
           if [ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]; then
             cargo zigbuild -r --target ${{ matrix.target }} --workspace
           else
