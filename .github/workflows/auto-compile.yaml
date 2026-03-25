@@ -67,3 +67,5 @@ jobs:
             target/${{ matrix.target }}/release/rs-clip-bridge-server
             !target/${{ matrix.target }}/release/*.d
             !target/${{ matrix.target }}/release/deps/
+          overwrite: true
+          retention-days: 3
