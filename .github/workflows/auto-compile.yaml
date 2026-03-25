@@ -10,6 +10,7 @@ on:
       - "crates/*/Cargo.toml"
       - "Cargo.toml"
       - "Cargo.lock"
+  workflow_dispatch: null
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
