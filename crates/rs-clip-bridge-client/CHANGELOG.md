@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.1.1 - 2026-03-25 19:10
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-client-v0.1.0...rs-clip-bridge-client-v0.1.1)
+
+### 🏡 Chore
+
+- refine tracing log levels and add more logs ([bc8433c](https://github.com/ws-io/ws.io-rs/commit/bc8433c))
+
+### 📖 Documentation
+
+- update README ([ef2e7ab](https://github.com/ws-io/ws.io-rs/commit/ef2e7ab))
+- update README ([1bc8350](https://github.com/ws-io/ws.io-rs/commit/1bc8350))
+
+### 🚀 Enhancements
+
+- *(client)* allow using feature flags to select rustls crypto provider ([7e005f4](https://github.com/ws-io/ws.io-rs/commit/7e005f4))
+
+### 🩹 Fixes
+
+- *(client)* replace wsio-client feature `tls-rustls-native` with `tls-rustls-webpki` ([4fc6b8a](https://github.com/ws-io/ws.io-rs/commit/4fc6b8a))
+
 ## 0.1.0 - 2026-03-25 17:41
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/releases/tag/rs-clip-bridge-client-v0.1.0)
