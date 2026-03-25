@@ -30,7 +30,8 @@ RUN mkdir -p ./crates/rs-clip-bridge-server/src && \
 
 ## Copy actual source code and build with lint + format checks
 COPY ./rustfmt.toml ./
-COPY ./crates ./crates
+COPY ./crates/rs-clip-bridge-server ./crates/rs-clip-bridge-server
+COPY ./crates/rs-clip-bridge-types ./crates/rs-clip-bridge-types
 RUN touch ./crates/rs-clip-bridge-server/src/main.rs && \
     touch ./crates/rs-clip-bridge-types/src/lib.rs && \
     cargo +nightly fmt --all -- --check && \
