@@ -18,7 +18,6 @@ use kikiutils::{
         make_tracing_fmt_layer_with_local_time,
     },
 };
-pub use rs_clip_bridge_types as types;
 use tokio::{
     net::TcpListener,
     select,
@@ -35,6 +34,7 @@ use wsio_server::{
 mod cli;
 mod config;
 mod namespaces;
+mod types;
 
 use self::{
     cli::Cli,

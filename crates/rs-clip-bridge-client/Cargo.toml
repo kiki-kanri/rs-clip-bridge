@@ -22,10 +22,14 @@ repository.workspace = true
 [dependencies]
 anyhow = "1.0.102"
 arboard = "3.6.1"
+chacha20poly1305 = "0.10.1"
 clap = { version = "4.6.0", features = ["derive", "env"] }
 clipboard-master = "4.0.0"
 confique = { version = "0.4.0", features = ["toml"] }
+hex = "0.4.3"
 kikiutils = { version = "0.7.2", features = ["signal", "task", "tracing"] }
+postcard = { version = "1.1.3", features = ["alloc", "use-std"], default-features = false }
+rand = "0.10.0"
 rs-clip-bridge-types = { path = "../rs-clip-bridge-types" }
 serde = { version = "1.0.228", features = ["derive"] }
 tokio = { version = "1.50.0", features = ["rt-multi-thread"] }

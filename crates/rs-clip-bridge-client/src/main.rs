@@ -13,10 +13,12 @@ use std::{
 };
 
 use anyhow::{
+    Context,
     Result,
     anyhow,
 };
 use arboard::Clipboard;
+use chacha20poly1305::Key;
 use clap::Parser;
 use confique::Config;
 use kikiutils::{
@@ -27,7 +29,10 @@ use kikiutils::{
         make_tracing_fmt_layer_with_local_time,
     },
 };
-use rs_clip_bridge_types as types;
+use postcard::{
+    from_bytes,
+    to_allocvec,
+};
 use tokio::{
     select,
     sync::mpsc::{
@@ -46,14 +51,21 @@ use wsio_client::{
 
 mod cli;
 mod config;
+mod crypto;
 mod monitor;
 mod state;
+mod types;
 
 use self::{
     cli::Cli,
     config::{
         ClientConfig,
         confique_client_config_layer::ClientConfigLayer,
+    },
+    crypto::{
+        decrypt,
+        encrypt,
+        parse_key,
     },
     monitor::spawn_clipboard_monitor,
     state::LAST_CONTENT,
@@ -70,6 +82,7 @@ use self::{
 static APP_SHUTDOWN_TOKEN: LazyLock<CancellationToken> = LazyLock::new(CancellationToken::new);
 static APP_TASK_MANAGER: LazyLock<TaskManager> = LazyLock::new(TaskManager::new);
 static CLIENT_CONFIG: OnceLock<ClientConfig> = OnceLock::new();
+static CRYPTO_KEY: OnceLock<Key> = OnceLock::new();
 pub static WS_IO_CLIENT: OnceLock<WsIoClient> = OnceLock::new();
 
 // ================================================================================================
@@ -91,6 +104,7 @@ fn load_config() -> Result<ClientConfig> {
         channel_id: cli.channel_id,
         #[cfg(unix)]
         display: cli.display,
+        encrypt_key: cli.encrypt_key,
         server_url: cli.server_url,
     };
 
@@ -126,7 +140,7 @@ fn setup_ws_client(config: ClientConfig) -> Result<WsIoClient> {
 #[cfg(unix)]
 fn setup_display(display: &Option<String>) {
     if let Some(d) = display {
-        // SAFETY: Safe before async runtime starts.
+        // SAFETY: safe before async runtime starts
         unsafe { set_var("DISPLAY", d) };
     }
 }
@@ -136,44 +150,87 @@ fn setup_display(display: &Option<String>) {
 // ================================================================================================
 
 async fn handle_server_event(_: Arc<WsIoClientSession>, data: Arc<ClipboardEventData>) -> Result<()> {
-    if let ClipboardContent::Text(text) = &data.content {
-        // Update LAST_CONTENT before writing to local clipboard
-        *LAST_CONTENT.write().await = text.clone();
+    let key = CRYPTO_KEY.get().context("Crypto key not initialized")?;
 
-        let mut clipboard = Clipboard::new().map_err(|e| anyhow!("Clipboard init error: {e}"))?;
-        clipboard
-            .set_text(text)
-            .map_err(|e| anyhow!("Clipboard write error: {e}"))?;
+    // Decrypt content
+    let plaintext = decrypt(key, &data.nonce, &data.content).map_err(|e| anyhow!("Decryption failed: {e}"))?;
 
-        tracing::info!("Synced clipboard from server ({} bytes)", text.len());
+    // Deserialize ClipboardContent
+    let content: ClipboardContent = from_bytes(&plaintext).map_err(|e| anyhow!("Deserialize failed: {e}"))?;
+
+    // Update LAST_CONTENT before writing to local clipboard
+    *LAST_CONTENT.write().await = plaintext.clone();
+
+    // Write to local clipboard based on type
+    let mut clipboard = Clipboard::new().map_err(|e| anyhow!("Clipboard init error: {e}"))?;
+    match &content {
+        ClipboardContent::Text(text) => {
+            clipboard
+                .set_text(text)
+                .map_err(|e| anyhow!("Clipboard write error: {e}"))?;
+
+            tracing::debug!("Synced text clipboard from server ({} bytes)", plaintext.len());
+        }
+        ClipboardContent::Image(_) | ClipboardContent::Raw(_) => {
+            tracing::warn!("Image/Raw clipboard not yet supported");
+        }
     }
 
     Ok(())
 }
 
-async fn run_clipboard_sender(mut rx: UnboundedReceiver<String>, client: WsIoClient) {
+async fn run_clipboard_sender(mut rx: UnboundedReceiver<ClipboardContent>, client: WsIoClient) {
+    let key = match CRYPTO_KEY.get() {
+        Some(k) => k,
+        None => {
+            tracing::error!("Crypto key not initialized");
+            return;
+        }
+    };
+
     loop {
         select! {
             _ = APP_SHUTDOWN_TOKEN.cancelled() => break,
             Some(content) = rx.recv() => {
+                // Serialize ClipboardContent to bytes
+                let serialized = match to_allocvec(&content) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        tracing::error!("Serialize failed: {e}");
+                        continue;
+                    }
+                };
+
                 // Skip if content matches LAST_CONTENT (circular write prevention)
-                if *LAST_CONTENT.read().await == content {
+                if *LAST_CONTENT.read().await == serialized {
                     continue;
                 }
 
-                let data = ClipboardEventData {
+                let timestamp = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .map(|d| d.as_millis() as u64)
+                    .unwrap_or(0);
+
+                // Encrypt serialized content
+                let (nonce, encrypted) = match encrypt(key, &serialized) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        tracing::error!("Encryption failed: {e}");
+                        continue;
+                    }
+                };
+
+                let event_data = ClipboardEventData {
                     device_name: None,
-                    content: ClipboardContent::Text(content.clone()),
-                    timestamp: SystemTime::now()
-                        .duration_since(UNIX_EPOCH)
-                        .map(|d| d.as_millis() as u64)
-                        .unwrap_or(0),
+                    content: encrypted,
+                    nonce,
+                    timestamp,
                 };
 
                 // Update LAST_CONTENT before sending
-                *LAST_CONTENT.write().await = content;
+                *LAST_CONTENT.write().await = serialized;
 
-                if let Err(e) = client.emit::<ClipboardEventData>("event", Some(&data)).await {
+                if let Err(e) = client.emit::<ClipboardEventData>("event", Some(&event_data)).await {
                     tracing::error!("Failed to emit clipboard event: {e}");
                 }
             }
@@ -190,7 +247,6 @@ async fn run_signal_handler() {
         _ = wait_for_shutdown_signal() => {},
         _ = APP_SHUTDOWN_TOKEN.cancelled() => {},
     }
-
     shutdown();
 }
 
@@ -206,9 +262,19 @@ fn shutdown() {
 async fn main() -> Result<()> {
     // --- Init ---
     init_tracing()?;
+    tracing::info!("Starting rs-clip-bridge-client");
 
     // --- Setup ---
     let config = load_config()?;
+    tracing::debug!(
+        channel_id = %config.channel_id,
+        server_url = %config.server_url,
+        "Configuration loaded"
+    );
+
+    // Parse and store encryption key
+    let key = parse_key(&config.encrypt_key)?;
+    CRYPTO_KEY.set(key).ok();
 
     #[cfg(unix)]
     setup_display(&config.display);
@@ -218,6 +284,7 @@ async fn main() -> Result<()> {
     // Register event handler before connecting
     ws_client.on("event", handle_server_event);
     ws_client.connect().await;
+    tracing::info!("Connected to server");
 
     // Spawn clipboard monitor
     let (tx, rx) = unbounded_channel();
