@@ -27,17 +27,24 @@ Cross-platform clipboard sync client for rs-clip-bridge. Monitors local clipboar
   - **Linux**: X11 development libraries (`libx11-dev`)
   - **macOS**: Xcode command line tools
   - **Windows**: Visual Studio Build Tools
+- Platform-specific TLS backend (selected by feature):
+  - **Default (`rustls-ring`)**: Pure Rust TLS via `ring` crypto — no system dependencies
+  - **`rustls-aws-lc-rs`**: Uses AWS LC-RS crypto backend
+
+### Build from Source
+
+```bash
+# Default (ring backend)
+cargo b -r -p rs-clip-bridge-client
+
+# With aws-lc-rs backend
+cargo b -r -p rs-clip-bridge-client --features rustls-aws-lc-rs
+```
 
 ### Cargo Install
 
 ```bash
 cargo install rs-clip-bridge-client
-```
-
-### Build from Source
-
-```bash
-cargo b -r -p rs-clip-bridge-client
 ```
 
 ### GitHub Actions
