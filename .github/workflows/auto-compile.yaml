@@ -19,6 +19,10 @@ jobs:
             target: x86_64-unknown-linux-musl
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
 
     steps:
       - name: Checkout code
@@ -30,12 +34,23 @@ jobs:
           toolchain: stable
           target: ${{ matrix.target }}
 
+      - name: Install cargo-zigbuild & Zig (Linux ARM only)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update && sudo apt-get install -y zig
+          cargo install cargo-zigbuild
+
       - name: Install musl-tools
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: sudo apt-get install -y musl-tools
 
       - name: Build
-        run: cargo b -r --target ${{ matrix.target }} --workspace
+        run: |
+          if [ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]; then
+            cargo zigbuild -r --target ${{ matrix.target }} --workspace
+          else
+            cargo b -r --target ${{ matrix.target }} --workspace
+          fi
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v7
@@ -47,5 +62,3 @@ jobs:
             target/${{ matrix.target }}/release/rs-clip-bridge-server
             !target/${{ matrix.target }}/release/*.d
             !target/${{ matrix.target }}/release/deps/
-            !target/${{ matrix.target }}/release/build/
-            !target/${{ matrix.target }}/release/incremental/
