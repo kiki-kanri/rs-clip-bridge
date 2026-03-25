@@ -31,7 +31,7 @@ pub struct Cli {
     pub command: Option<Commands>,
 
     /// Path to the configuration file (TOML format)
-    #[arg(short, long, value_name = "FILE")]
+    #[arg(short, long, value_name = "FILE", env = "RS_CLIP_CLIENT_CONFIG")]
     pub config: Option<PathBuf>,
 
     /// Linux/X11 display name (e.g., :0). Defaults to $DISPLAY if empty

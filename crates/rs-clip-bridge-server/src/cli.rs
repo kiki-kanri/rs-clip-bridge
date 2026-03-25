@@ -29,7 +29,7 @@ pub struct Cli {
     pub command: Option<Commands>,
 
     /// Path to the configuration file (TOML format).
-    #[arg(short, long, value_name = "FILE")]
+    #[arg(short, long, value_name = "FILE", env = "RS_CLIP_SERVER_CONFIG")]
     pub config: Option<PathBuf>,
 
     /// Server host address (e.g., 127.0.0.1 or example.com).
