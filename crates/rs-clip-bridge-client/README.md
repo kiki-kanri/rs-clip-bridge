@@ -7,6 +7,8 @@
 
 Cross-platform clipboard sync client for rs-clip-bridge. Monitors local clipboard changes and synchronizes them with a remote server via WebSockets. All clipboard data is encrypted using ChaCha20-Poly1305.
 
+- [✨ Release Notes](./CHANGELOG.md)
+
 ## Features
 
 - **Clipboard Monitoring** — Continuously monitors local clipboard for changes using platform-native APIs

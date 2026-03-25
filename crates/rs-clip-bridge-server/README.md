@@ -2,10 +2,12 @@
 
 [![crates.io](https://img.shields.io/crates/v/rs-clip-bridge-server)](https://crates.io/crates/rs-clip-bridge-server)
 [![docs.rs](https://docs.rs/rs-clip-bridge-server/badge.svg)](https://docs.rs/rs-clip-bridge-server)
-[![License][license-src]][license-href]
 [![codecov][codecov-src]][codecov-href]
+[![License][license-src]][license-href]
 
 WebSocket server for rs-clip-bridge clipboard synchronization. Relays encrypted clipboard events between clients within the same channel.
+
+- [✨ Release Notes](./CHANGELOG.md)
 
 ## Features
 

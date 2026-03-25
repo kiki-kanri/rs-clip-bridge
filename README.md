@@ -5,8 +5,6 @@
 
 A blazingly fast, cross-platform clipboard synchronizer using WebSockets with end-to-end ChaCha20-Poly1305 encryption. Sync clipboard content across multiple devices in real-time.
 
-- [✨ Release Notes](./CHANGELOG.md)
-
 ## Features
 
 - **Real-time Sync** — Clipboard changes propagate instantly across all connected devices via WebSockets
