@@ -1,6 +1,15 @@
-use std::path::PathBuf;
+use std::{
+    fs::write,
+    path::PathBuf,
+};
 
-use clap::Parser;
+use clap::{
+    Parser,
+    Subcommand,
+};
+use confique::toml::template;
+
+use crate::config::ServerConfig;
 
 #[derive(Parser)]
 #[command(
@@ -16,6 +25,9 @@ pub struct Cli {
     #[arg(short, long, env = "RS_CLIP_AUTH_KEY")]
     pub auth_key: Option<String>,
 
+    #[command(subcommand)]
+    pub command: Option<Commands>,
+
     /// Path to the configuration file (TOML format).
     #[arg(short, long, value_name = "FILE")]
     pub config: Option<PathBuf>,
@@ -29,4 +41,22 @@ pub struct Cli {
     /// Can be set via the RS_CLIP_SERVER_PORT environment variable.
     #[arg(short, long, env = "RS_CLIP_SERVER_PORT", default_value = "8000")]
     pub port: Option<u16>,
+}
+
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Generate a configuration file template
+    GenerateConfigTemplate {
+        /// Output path (default: stdout)
+        #[arg(short, long, value_name = "FILE")]
+        output: Option<PathBuf>,
+    },
+}
+
+pub fn run_generate_config_template(output: Option<PathBuf>) {
+    let content = template::<ServerConfig>(Default::default());
+    match output {
+        Some(path) => write(&path, &content).unwrap(),
+        None => print!("{}", content),
+    }
 }

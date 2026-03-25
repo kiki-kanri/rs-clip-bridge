@@ -1,6 +1,15 @@
-use std::path::PathBuf;
+use std::{
+    fs::write,
+    path::PathBuf,
+};
 
-use clap::Parser;
+use clap::{
+    Parser,
+    Subcommand,
+};
+use confique::toml::template;
+
+use crate::config::ClientConfig;
 
 #[derive(Parser)]
 #[command(
@@ -15,8 +24,11 @@ pub struct Cli {
     pub auth_key: Option<String>,
 
     /// Channel ID for clipboard isolation (required)
-    #[arg(short, long, env = "RS_CLIP_CHANNEL_ID")]
+    #[arg(long, env = "RS_CLIP_CHANNEL_ID")]
     pub channel_id: Option<String>,
+
+    #[command(subcommand)]
+    pub command: Option<Commands>,
 
     /// Path to the configuration file (TOML format)
     #[arg(short, long, value_name = "FILE")]
@@ -34,4 +46,22 @@ pub struct Cli {
     /// WebSocket server URL (e.g., ws://127.0.0.1:8080 or wss://example.com)
     #[arg(short, long, value_name = "URL", env = "RS_CLIP_SERVER_URL")]
     pub server_url: Option<String>,
+}
+
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Generate a configuration file template
+    GenerateConfigTemplate {
+        /// Output path (default: stdout)
+        #[arg(short, long, value_name = "FILE")]
+        output: Option<PathBuf>,
+    },
+}
+
+pub fn run_generate_config_template(output: Option<PathBuf>) {
+    let content = template::<ClientConfig>(Default::default());
+    match output {
+        Some(path) => write(&path, &content).unwrap(),
+        None => print!("{}", content),
+    }
 }

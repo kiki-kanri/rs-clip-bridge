@@ -1,6 +1,9 @@
-use std::sync::{
-    LazyLock,
-    OnceLock,
+use std::{
+    process::exit,
+    sync::{
+        LazyLock,
+        OnceLock,
+    },
 };
 
 use anyhow::{
@@ -37,7 +40,11 @@ mod namespaces;
 mod types;
 
 use self::{
-    cli::Cli,
+    cli::{
+        Cli,
+        Commands,
+        run_generate_config_template,
+    },
     config::{
         ServerConfig,
         confique_server_config_layer::ServerConfigLayer,
@@ -68,6 +75,17 @@ fn init_tracing() -> Result<()> {
 
 fn load_config() -> Result<ServerConfig> {
     let cli = Cli::parse();
+
+    // Handle subcommands
+    if let Some(cmd) = cli.command {
+        match cmd {
+            Commands::GenerateConfigTemplate { output } => {
+                run_generate_config_template(output);
+                exit(0);
+            }
+        }
+    }
+
     let layer = ServerConfigLayer {
         auth_key: cli.auth_key,
         host: cli.host,

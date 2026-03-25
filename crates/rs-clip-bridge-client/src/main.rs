@@ -1,6 +1,7 @@
 #[cfg(unix)]
 use std::env::set_var;
 use std::{
+    process::exit,
     sync::{
         Arc,
         LazyLock,
@@ -57,7 +58,11 @@ mod state;
 mod types;
 
 use self::{
-    cli::Cli,
+    cli::{
+        Cli,
+        Commands,
+        run_generate_config_template,
+    },
     config::{
         ClientConfig,
         confique_client_config_layer::ClientConfigLayer,
@@ -99,6 +104,17 @@ fn init_tracing() -> Result<()> {
 
 fn load_config() -> Result<ClientConfig> {
     let cli = Cli::parse();
+
+    // Handle subcommands
+    if let Some(cmd) = cli.command {
+        match cmd {
+            Commands::GenerateConfigTemplate { output } => {
+                run_generate_config_template(output);
+                exit(0);
+            }
+        }
+    }
+
     let layer = ClientConfigLayer {
         auth_key: cli.auth_key,
         channel_id: cli.channel_id,
