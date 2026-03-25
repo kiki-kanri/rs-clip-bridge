@@ -94,6 +94,31 @@ pub static WS_IO_CLIENT: OnceLock<WsIoClient> = OnceLock::new();
 // Initialization
 // ================================================================================================
 
+pub fn init_rustls_provider() -> Result<()> {
+    #[cfg(feature = "rustls-aws-lc-rs")]
+    {
+        use rustls::crypto::aws_lc_rs::default_provider;
+
+        let _ = default_provider().install_default();
+        return Ok(());
+    }
+
+    #[cfg(feature = "rustls-ring")]
+    {
+        use rustls::crypto::ring::default_provider;
+
+        let _ = default_provider().install_default();
+        return Ok(());
+    }
+
+    #[cfg(all(not(feature = "rustls-ring"), not(feature = "rustls-aws-lc-rs")))]
+    {
+        use anyhow::bail;
+
+        bail!("No rustls crypto provider selected. Please enable 'rustls-ring' or 'rustls-aws-lc-rs' feature.");
+    }
+}
+
 fn init_tracing() -> Result<()> {
     init_tracing_with_layer(
         make_tracing_fmt_layer_with_local_time()?
@@ -286,6 +311,7 @@ fn shutdown() {
 async fn main() -> Result<()> {
     // --- Init ---
     init_tracing()?;
+    init_rustls_provider()?;
     tracing::info!("Starting rs-clip-bridge-client");
 
     // --- Setup ---
