@@ -20,10 +20,10 @@ use crate::config::ServerConfig;
                   Supports both text and binary data, with server-side grouping via auth keys."
 )]
 pub struct Cli {
-    /// Authentication key for server access and clipboard grouping.
-    /// Can be set via the RS_CLIP_AUTH_KEY environment variable.
-    #[arg(short, long, env = "RS_CLIP_AUTH_KEY")]
-    pub auth_key: Option<String>,
+    /// Authentication keys for server access (multiple allowed).
+    /// Can be set via the RS_CLIP_AUTH_KEYS environment variable.
+    #[arg(short, long, value_delimiter = ',', env = "RS_CLIP_AUTH_KEYS")]
+    pub auth_keys: Option<Vec<String>>,
 
     #[command(subcommand)]
     pub command: Option<Commands>,

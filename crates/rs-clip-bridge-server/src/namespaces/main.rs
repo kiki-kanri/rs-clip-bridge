@@ -58,9 +58,7 @@ async fn init_response_handler(
         .get()
         .ok_or_else(|| anyhow!("Server config not initialized"))?;
 
-    if let Some(ref required_key) = config.auth_key
-        && auth_key.as_ref() != Some(required_key)
-    {
+    if config.auth_keys.is_empty() || !config.auth_keys.iter().any(|k| Some(k) == auth_key.as_ref()) {
         let _ = connection.disconnect().await;
         bail!("Unauthorized: Auth key mismatch");
     }

@@ -87,7 +87,7 @@ fn load_config() -> Result<ServerConfig> {
     }
 
     let layer = ServerConfigLayer {
-        auth_key: cli.auth_key,
+        auth_keys: cli.auth_keys,
         host: cli.host,
         port: cli.port,
     };
