@@ -37,24 +37,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Set up rust
+      - name: Set up Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
           target: ${{ matrix.target }}
+          cache: true
+          cache-dependency-path: Cargo.lock
 
       - name: Install musl-tools
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: sudo apt-get install -y musl-tools
 
-      - name: Install Zig (For Linux ARM cross-compile)
+      - name: Install Zig and cargo-zigbuild (ARM Linux only)
         if: matrix.target == 'aarch64-unknown-linux-gnu'
         uses: mlugg/setup-zig@v2
         with:
           version: latest
 
-      - name: Install cargo-zigbuild
+      - name: Cache cargo-zigbuild
         if: matrix.target == 'aarch64-unknown-linux-gnu'
+        id: cache-zigbuild
+        uses: actions/cache@v5
+        with:
+          path: ~/.cargo/bin/cargo-zigbuild
+          key: cargo-zigbuild-${{ runner.os }}
+
+      - name: Install cargo-zigbuild
+        if: matrix.target == 'aarch64-unknown-linux-gnu' && steps.cache-zigbuild.outputs.cache-hit != 'true'
         run: cargo install cargo-zigbuild
 
       - name: Build
