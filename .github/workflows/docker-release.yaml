@@ -2,13 +2,8 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "crates/rs-clip-bridge-server/**"
-      - "crates/rs-clip-bridge-types/**"
-      - "Cargo.toml"
-      - "Cargo.lock"
+    tags:
+      - "rs-clip-bridge-server-v*"
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
