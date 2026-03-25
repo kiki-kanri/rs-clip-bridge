@@ -8,33 +8,41 @@ WORKDIR /app
 ## Upgrade and install packages
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends gcc make mold
+    apt-get install -y --no-install-recommends gcc libssl-dev make mold pkg-config
 
 ## Add rustup components
-RUN rustup component add clippy
+RUN rustup component add clippy && \
+    rustup component add --toolchain nightly rustfmt
 
 ## Copy Cargo config and manifest for dependency caching
 COPY ./.cargo ./.cargo
 COPY ./Cargo.lock ./Cargo.toml ./
+COPY ./crates/rs-clip-bridge-server/Cargo.toml ./crates/rs-clip-bridge-server/
+COPY ./crates/rs-clip-bridge-types/Cargo.toml ./crates/rs-clip-bridge-types/
 
 ## Prebuild dummy project to populate Cargo dependency cache
-RUN mkdir ./src && \
-    echo 'fn main() {}' >./src/main.rs && \
-    cargo b -r && \
-    rm -rf ./src
+RUN mkdir -p ./crates/rs-clip-bridge-server/src && \
+    echo 'fn main() {}' >./crates/rs-clip-bridge-server/src/main.rs && \
+    mkdir -p ./crates/rs-clip-bridge-types/src && \
+    touch ./crates/rs-clip-bridge-types/src/lib.rs && \
+    cargo b -r -p rs-clip-bridge-server && \
+    rm -rf ./crates/rs-clip-bridge-server/src ./crates/rs-clip-bridge-types/src
 
 ## Copy actual source code and build with lint + format checks
-COPY ./src ./src
-RUN touch ./src/main.rs && \
+COPY ./rustfmt.toml ./
+COPY ./crates ./crates
+RUN touch ./crates/rs-clip-bridge-server/src/main.rs && \
+    touch ./crates/rs-clip-bridge-types/src/lib.rs && \
+    cargo +nightly fmt --all -- --check && \
     cargo clippy -r --all-features --all-targets -- -D warnings && \
-    cargo b -r --all-features
+    cargo b -r -p rs-clip-bridge-server --all-features
 
 # Runtime stage
 FROM debian:trixie-slim
 
 ## Set envs and workdir
-ENV SERVER_HOST='0.0.0.0' \
-    SERVER_PORT=8000
+ENV RS_CLIP_SERVER_HOST='0.0.0.0' \
+    RS_CLIP_SERVER_PORT=8000
 
 WORKDIR /app
 
@@ -55,7 +63,7 @@ RUN \
 COPY --from=build-stage /app/target/release/rs-clip-bridge-server ./
 
 ## Copy and set the entrypoint script
-COPY --chmod=700 ./docker-entrypoint.sh ./
+COPY --chmod=700 ./crates/rs-clip-bridge-server/docker-entrypoint.sh ./
 RUN chown -R 10001:nogroup /app
 USER 10001
 ENTRYPOINT ["tini", "--"]
