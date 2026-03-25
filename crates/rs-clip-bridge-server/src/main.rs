@@ -6,7 +6,6 @@ use std::sync::{
 use anyhow::{
     Result,
     anyhow,
-    bail,
 };
 use axum::Router;
 use clap::Parser;
