@@ -45,100 +45,121 @@ use self::{
     },
 };
 
-// Constants/Statics
+// ================================================================================================
+// Application State
+// ================================================================================================
+
 static APP_SHUTDOWN_TOKEN: LazyLock<CancellationToken> = LazyLock::new(CancellationToken::new);
 static APP_TASK_MANAGER: LazyLock<TaskManager> = LazyLock::new(TaskManager::new);
 static SERVER_CONFIG: OnceLock<ServerConfig> = OnceLock::new();
 pub static WS_IO_SERVER: LazyLock<WsIoServer> =
     LazyLock::new(|| WsIoServer::builder().packet_codec(WsIoPacketCodec::Postcard).build());
 
-// Functions
-fn init_namespaces_and_get_tower_layer() -> WsIoServerLayer {
-    namespaces::main::MAIN.path();
-    WS_IO_SERVER.layer()
+// ================================================================================================
+// Initialization
+// ================================================================================================
+
+fn init_tracing() -> Result<()> {
+    init_tracing_with_layer(
+        make_tracing_fmt_layer_with_local_time()?
+            .with_target(false)
+            .with_filter(LevelFilter::INFO),
+    )
 }
 
-fn parse_cli_and_set_config() -> Result<ServerConfig> {
+fn load_config() -> Result<ServerConfig> {
     let cli = Cli::parse();
-    let cli_config_layer = ServerConfigLayer {
+    let layer = ServerConfigLayer {
         auth_key: cli.auth_key,
         host: cli.host,
         port: cli.port,
     };
 
-    let mut config_builder = ServerConfig::builder().preloaded(cli_config_layer);
-
+    let mut builder = ServerConfig::builder().preloaded(layer);
     if let Some(path) = cli.config {
-        config_builder = config_builder.file(path);
+        builder = builder.file(path);
     }
 
-    let config = config_builder
-        .load()
-        .map_err(|err| anyhow!("Configuration load failed: {}", err))?;
+    let config = builder.load().map_err(|e| anyhow!("Config load failed: {e}"))?;
 
     SERVER_CONFIG
         .set(config.clone())
-        .map_err(|_| anyhow!("Failed to set server config"))?;
+        .ok()
+        .ok_or_else(|| anyhow!("Failed to set server config"))?;
 
     Ok(config)
 }
 
-pub fn shutdown() {
-    APP_SHUTDOWN_TOKEN.cancel();
+fn setup_server_layer() -> WsIoServerLayer {
+    namespaces::main::MAIN.path();
+    WS_IO_SERVER.layer()
 }
 
-async fn start_server(cancel_token: CancellationToken) -> Result<()> {
-    let Some(config) = SERVER_CONFIG.get() else {
-        bail!("Failed to get server config");
-    };
+// ================================================================================================
+// Runtime
+// ================================================================================================
 
-    let server_addr = format!("{}:{}", &config.host, &config.port);
-    tracing::info!("Server: starting on {}", &server_addr);
+async fn run_server(cancel: CancellationToken) -> Result<()> {
+    let config = SERVER_CONFIG
+        .get()
+        .ok_or_else(|| anyhow!("Server config not initialized"))?;
 
-    let app = Router::new().layer(init_namespaces_and_get_tower_layer());
-    let listener = TcpListener::bind(server_addr).await?;
+    let addr = format!("{}:{}", config.host, config.port);
 
-    tracing::info!("Server: listening on {}", &listener.local_addr()?);
+    tracing::info!("Starting server on {addr}");
+
+    let app = Router::new().layer(setup_server_layer());
+    let listener = TcpListener::bind(&addr).await?;
+
+    tracing::info!("Listening on {}", listener.local_addr()?);
 
     axum::serve(listener, app)
-        .with_graceful_shutdown(async move { cancel_token.cancelled().await })
+        .with_graceful_shutdown(async move { cancel.cancelled().await })
         .await?;
 
-    tracing::info!("Server: stopped");
+    tracing::info!("Server stopped");
     Ok(())
 }
 
+async fn run_signal_handler() {
+    select! {
+        _ = wait_for_shutdown_signal() => {},
+        _ = APP_SHUTDOWN_TOKEN.cancelled() => {},
+    }
+
+    shutdown();
+}
+
+fn shutdown() {
+    APP_SHUTDOWN_TOKEN.cancel();
+}
+
+// ================================================================================================
+// Entry Point
+// ================================================================================================
+
 #[tokio::main]
 async fn main() -> Result<()> {
-    init_tracing_with_layer(
-        make_tracing_fmt_layer_with_local_time()?
-            .with_target(false)
-            .with_filter(LevelFilter::INFO),
-    )?;
+    // --- Init ---
+    init_tracing()?;
 
-    // Load config
-    parse_cli_and_set_config()?;
+    // --- Setup ---
+    load_config()?;
 
-    // Run server and register signal handler
-    APP_TASK_MANAGER.spawn_with_token(move |token| async {
-        if start_server(token).await.is_err() {
+    // --- Runtime: spawn tasks ---
+    APP_TASK_MANAGER.spawn_with_token(|token| async {
+        if run_server(token).await.is_err() {
             shutdown();
         }
     });
 
-    APP_TASK_MANAGER.spawn_with_token(async |token| {
-        select! {
-            _ = token.cancelled() => {},
-            _ = wait_for_shutdown_signal() => {},
-        }
+    APP_TASK_MANAGER.spawn(run_signal_handler());
 
-        shutdown();
-    });
-
-    // Wait for app shutdown
+    // --- Wait for shutdown ---
     APP_SHUTDOWN_TOKEN.cancelled().await;
     tracing::info!("Shutting down...");
 
+    // --- Cleanup ---
     WS_IO_SERVER.shutdown().await;
     APP_TASK_MANAGER.cancel_and_join_existing().await;
 

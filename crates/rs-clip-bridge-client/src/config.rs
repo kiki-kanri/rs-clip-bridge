@@ -9,9 +9,7 @@ pub struct ClientConfig {
     pub channel_id: String,
 
     /// Linux-specific: X11 Display name (e.g., ":0")
-    /// NOTE: Currently unused but kept for future platform-specific clipboard needs
     #[cfg(unix)]
-    #[allow(dead_code)]
     pub display: Option<String>,
 
     /// Server connection URL (e.g., ws://localhost:8080)

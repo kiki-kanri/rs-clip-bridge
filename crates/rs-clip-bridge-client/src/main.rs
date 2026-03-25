@@ -1,4 +1,5 @@
 use std::{
+    env::set_var,
     sync::{
         Arc,
         LazyLock,
@@ -13,7 +14,6 @@ use std::{
 use anyhow::{
     Result,
     anyhow,
-    bail,
 };
 use arboard::Clipboard;
 use clap::Parser;
@@ -29,7 +29,10 @@ use kikiutils::{
 use rs_clip_bridge_types as types;
 use tokio::{
     select,
-    sync::mpsc::unbounded_channel,
+    sync::mpsc::{
+        UnboundedReceiver,
+        unbounded_channel,
+    },
 };
 use tokio_util::sync::CancellationToken;
 use tracing::level_filters::LevelFilter;
@@ -59,153 +62,179 @@ use self::{
     },
 };
 
-// Constants/Statics
+// ================================================================================================
+// Application State
+// ================================================================================================
+
 static APP_SHUTDOWN_TOKEN: LazyLock<CancellationToken> = LazyLock::new(CancellationToken::new);
 static APP_TASK_MANAGER: LazyLock<TaskManager> = LazyLock::new(TaskManager::new);
 static CLIENT_CONFIG: OnceLock<ClientConfig> = OnceLock::new();
 pub static WS_IO_CLIENT: OnceLock<WsIoClient> = OnceLock::new();
 
-// Functions
-async fn handle_ws_io_server_event(_: Arc<WsIoClientSession>, data: Arc<ClipboardEventData>) -> Result<()> {
-    let mut clipboard = Clipboard::new().map_err(|err| anyhow!("Clipboard init error: {err}"))?;
+// ================================================================================================
+// Initialization
+// ================================================================================================
 
-    match &data.content {
-        ClipboardContent::Text(text) => {
-            // Update LAST_CONTENT before writing to prevent circular detection
-            *LAST_CONTENT.write().await = text.clone();
-
-            if let Err(err) = clipboard.set_text(text) {
-                tracing::error!("Failed to set local clipboard: {err}");
-                bail!("Clipboard write error");
-            }
-
-            tracing::info!("Successfully synced clipboard from server ({} bytes)", text.len());
-        }
-        _ => unreachable!(),
-    }
-
-    Ok(())
+fn init_tracing() -> Result<()> {
+    init_tracing_with_layer(
+        make_tracing_fmt_layer_with_local_time()?
+            .with_target(false)
+            .with_filter(LevelFilter::INFO),
+    )
 }
 
-fn parse_cli_and_set_config() -> Result<ClientConfig> {
+fn load_config() -> Result<ClientConfig> {
     let cli = Cli::parse();
-    let cli_config_layer = ClientConfigLayer {
+    let layer = ClientConfigLayer {
         auth_key: cli.auth_key,
         channel_id: cli.channel_id,
         display: cli.display,
         server_url: cli.server_url,
     };
 
-    let mut config_builder = ClientConfig::builder().preloaded(cli_config_layer);
-
+    let mut builder = ClientConfig::builder().preloaded(layer);
     if let Some(path) = cli.config {
-        config_builder = config_builder.file(path);
+        builder = builder.file(path);
     }
 
-    let config = config_builder
-        .load()
-        .map_err(|e| anyhow!("Configuration load failed: {}", e))?;
+    let config = builder.load().map_err(|e| anyhow!("Config load failed: {e}"))?;
 
     CLIENT_CONFIG
         .set(config.clone())
-        .map_err(|_| anyhow!("Failed to set client config"))?;
+        .ok()
+        .ok_or_else(|| anyhow!("Failed to set client config"))?;
 
     Ok(config)
 }
 
-pub fn shutdown() {
-    APP_SHUTDOWN_TOKEN.cancel();
-}
-
-#[tokio::main]
-async fn main() -> Result<()> {
-    init_tracing_with_layer(
-        make_tracing_fmt_layer_with_local_time()?
-            .with_target(false)
-            .with_filter(LevelFilter::INFO),
-    )?;
-
-    // Get config
-    let config = parse_cli_and_set_config()?;
-
-    // Create and ws.io client
-    let ws_io_client = WsIoClient::builder(config.server_url.as_ref())?
+fn setup_ws_client(config: ClientConfig) -> Result<WsIoClient> {
+    let client = WsIoClient::builder(config.server_url.as_ref())?
         .packet_codec(WsIoPacketCodec::Postcard)
         .with_init_handler(move |_, _: Option<()>| {
-            let config = config.clone();
-            async move { Ok(Some((config.auth_key, config.channel_id))) }
+            let cfg = config.clone();
+            async move { Ok(Some((cfg.auth_key, cfg.channel_id))) }
         })
         .build();
 
-    WS_IO_CLIENT
-        .set(ws_io_client.clone())
-        .map_err(|_| anyhow!("Failed to set ws.io client"))?;
+    WS_IO_CLIENT.set(client.clone()).ok();
 
-    // Register event
-    ws_io_client.on("event", handle_ws_io_server_event);
+    Ok(client)
+}
 
-    // Connect
-    ws_io_client.connect().await;
+#[cfg(unix)]
+fn setup_display(display: &Option<String>) {
+    if let Some(d) = display {
+        // SAFETY: Safe before async runtime starts.
+        unsafe { set_var("DISPLAY", d) };
+    }
+}
 
-    // Create clipboard event channel
-    let (clipboard_event_tx, mut clipboard_event_rx) = unbounded_channel::<String>();
+// ================================================================================================
+// Event Handlers
+// ================================================================================================
 
-    // Spawn clipboard event handler task
-    spawn_clipboard_monitor(clipboard_event_tx);
+async fn handle_server_event(_: Arc<WsIoClientSession>, data: Arc<ClipboardEventData>) -> Result<()> {
+    if let ClipboardContent::Text(text) = &data.content {
+        // Update LAST_CONTENT before writing to local clipboard
+        *LAST_CONTENT.write().await = text.clone();
 
-    // Spawn read rx task
-    let ws_io_client_clone = ws_io_client.clone();
-    APP_TASK_MANAGER.spawn_with_token(|token| async move {
-        tracing::info!("Clipboard event handler task started");
+        let mut clipboard = Clipboard::new().map_err(|e| anyhow!("Clipboard init error: {e}"))?;
+        clipboard
+            .set_text(text)
+            .map_err(|e| anyhow!("Clipboard write error: {e}"))?;
 
-        loop {
-            select! {
-                _ = token.cancelled() => break,
-                Some(content) = clipboard_event_rx.recv() => {
-                    // Check for circular write: skip if content matches LAST_CONTENT
-                    if *LAST_CONTENT.read().await == content {
-                        continue;
-                    }
+        tracing::info!("Synced clipboard from server ({} bytes)", text.len());
+    }
 
-                    tracing::info!("Detected clipboard change, sending to server ({} bytes)", content.len());
+    Ok(())
+}
 
-                    let data = ClipboardEventData {
-                        device_name: None,
-                        content: ClipboardContent::Text(content.clone()),
-                        timestamp: SystemTime::now()
-                            .duration_since(UNIX_EPOCH)
-                            .map(|d| d.as_millis() as u64)
-                            .unwrap_or(0),
-                    };
+async fn run_clipboard_sender(mut rx: UnboundedReceiver<String>, client: WsIoClient) {
+    loop {
+        select! {
+            _ = APP_SHUTDOWN_TOKEN.cancelled() => break,
+            Some(content) = rx.recv() => {
+                // Skip if content matches LAST_CONTENT (circular write prevention)
+                if *LAST_CONTENT.read().await == content {
+                    continue;
+                }
 
-                    // Update LAST_CONTENT before sending
-                    *LAST_CONTENT.write().await = content;
+                let data = ClipboardEventData {
+                    device_name: None,
+                    content: ClipboardContent::Text(content.clone()),
+                    timestamp: SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .map(|d| d.as_millis() as u64)
+                        .unwrap_or(0),
+                };
 
-                    if let Err(err) = ws_io_client_clone.emit::<ClipboardEventData>("event", Some(&data)).await {
-                        tracing::error!("Failed to emit clipboard event: {err}");
-                    }
+                // Update LAST_CONTENT before sending
+                *LAST_CONTENT.write().await = content;
+
+                if let Err(e) = client.emit::<ClipboardEventData>("event", Some(&data)).await {
+                    tracing::error!("Failed to emit clipboard event: {e}");
                 }
             }
         }
+    }
+}
 
-        tracing::info!("Clipboard event handler task stopped");
+// ================================================================================================
+// Runtime
+// ================================================================================================
+
+async fn run_signal_handler() {
+    select! {
+        _ = wait_for_shutdown_signal() => {},
+        _ = APP_SHUTDOWN_TOKEN.cancelled() => {},
+    }
+
+    shutdown();
+}
+
+fn shutdown() {
+    APP_SHUTDOWN_TOKEN.cancel();
+}
+
+// ================================================================================================
+// Entry Point
+// ================================================================================================
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    // --- Init ---
+    init_tracing()?;
+
+    // --- Setup ---
+    let config = load_config()?;
+
+    #[cfg(unix)]
+    setup_display(&config.display);
+
+    let ws_client = setup_ws_client(config)?;
+
+    // Register event handler before connecting
+    ws_client.on("event", handle_server_event);
+    ws_client.connect().await;
+
+    // Spawn clipboard monitor
+    let (tx, rx) = unbounded_channel();
+    spawn_clipboard_monitor(tx);
+
+    // --- Runtime: spawn tasks ---
+    let ws_client_clone = ws_client.clone();
+    APP_TASK_MANAGER.spawn_with_token(|_| async move {
+        run_clipboard_sender(rx, ws_client_clone).await;
     });
 
-    // Wait for shutdown signal
-    APP_TASK_MANAGER.spawn_with_token(async |token| {
-        select! {
-            _ = token.cancelled() => {},
-            _ = wait_for_shutdown_signal() => {},
-        }
+    APP_TASK_MANAGER.spawn(run_signal_handler());
 
-        shutdown();
-    });
-
-    // Wait for app shutdown
+    // --- Wait for shutdown ---
     APP_SHUTDOWN_TOKEN.cancelled().await;
     tracing::info!("Shutting down...");
 
-    ws_io_client.disconnect().await;
+    // --- Cleanup ---
+    ws_client.disconnect().await;
     APP_TASK_MANAGER.cancel_and_join_existing().await;
 
     tracing::info!("Shutdown complete");
