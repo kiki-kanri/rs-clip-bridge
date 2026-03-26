@@ -1,6 +1,6 @@
 [package]
 name = "rs-clip-bridge-client"
-version = "0.1.1"
+version = "0.1.2"
 
 authors.workspace = true
 categories.workspace = true

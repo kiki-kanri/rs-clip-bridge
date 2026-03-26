@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.2 - 2026-03-26 02:11
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-client-v0.1.1...rs-clip-bridge-client-v0.1.2)
+
+### 💅 Refactors
+
+- replace `map_err` and `ok_or_else` with `context` ([5a1a959](https://github.com/ws-io/ws.io-rs/commit/5a1a959))
+
+### 🩹 Fixes
+
+- *(client)* address incomplete `cfg` feature flags in `init_rustls_provider` ([9191725](https://github.com/ws-io/ws.io-rs/commit/9191725))
+
 ## 0.1.1 - 2026-03-25 19:10
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-client-v0.1.0...rs-clip-bridge-client-v0.1.1)
