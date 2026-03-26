@@ -94,29 +94,20 @@ pub static WS_IO_CLIENT: OnceLock<WsIoClient> = OnceLock::new();
 // Initialization
 // ================================================================================================
 
-pub fn init_rustls_provider() -> Result<()> {
+pub fn init_rustls_crypto_provider() -> Result<()> {
     #[cfg(feature = "rustls-aws-lc-rs")]
-    {
-        use rustls::crypto::aws_lc_rs::default_provider;
+    let install_result = rustls::crypto::aws_lc_rs::default_provider().install_default();
 
-        let _ = default_provider().install_default();
-        return Ok(());
-    }
+    #[cfg(all(not(feature = "rustls-aws-lc-rs"), feature = "rustls-ring"))]
+    let install_result = rustls::crypto::ring::default_provider().install_default();
 
-    #[cfg(feature = "rustls-ring")]
-    {
-        use rustls::crypto::ring::default_provider;
+    #[cfg(any(feature = "rustls-aws-lc-rs", feature = "rustls-ring"))]
+    install_result.map_err(|e| anyhow!("Failed to install rustls crypto provider: {e:?}"))?;
 
-        let _ = default_provider().install_default();
-        return Ok(());
-    }
+    #[cfg(not(any(feature = "rustls-aws-lc-rs", feature = "rustls-ring")))]
+    anyhow::bail!("No rustls crypto provider selected. Enable 'rustls-ring' or 'rustls-aws-lc-rs'");
 
-    #[cfg(all(not(feature = "rustls-ring"), not(feature = "rustls-aws-lc-rs")))]
-    {
-        use anyhow::bail;
-
-        bail!("No rustls crypto provider selected. Please enable 'rustls-ring' or 'rustls-aws-lc-rs' feature.");
-    }
+    Ok(())
 }
 
 fn init_tracing() -> Result<()> {
@@ -311,7 +302,7 @@ fn shutdown() {
 async fn main() -> Result<()> {
     // --- Init ---
     init_tracing()?;
-    init_rustls_provider()?;
+    init_rustls_crypto_provider()?;
     tracing::info!("Starting rs-clip-bridge-client");
 
     // --- Setup ---
