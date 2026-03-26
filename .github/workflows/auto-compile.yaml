@@ -119,7 +119,10 @@ jobs:
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
           files: ./all-binaries/*
           overwrite: true
           body_path: ""
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true
