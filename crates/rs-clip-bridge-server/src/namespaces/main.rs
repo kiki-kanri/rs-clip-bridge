@@ -4,8 +4,8 @@ use std::sync::{
 };
 
 use anyhow::{
+    Context,
     Result,
-    anyhow,
     bail,
 };
 use wsio_server::{
@@ -53,10 +53,8 @@ async fn init_response_handler(
     connection: Arc<WsIoServerConnection>,
     data: Option<(Option<String>, String)>,
 ) -> Result<()> {
-    let (auth_key, channel_id) = data.ok_or_else(|| anyhow!("Invalid init response data"))?;
-    let config = SERVER_CONFIG
-        .get()
-        .ok_or_else(|| anyhow!("Server config not initialized"))?;
+    let (auth_key, channel_id) = data.context("Invalid init response data")?;
+    let config = SERVER_CONFIG.get().context("Server config not initialized")?;
 
     if config.auth_keys.is_empty() || !config.auth_keys.iter().any(|k| Some(k) == auth_key.as_ref()) {
         let _ = connection.disconnect().await;

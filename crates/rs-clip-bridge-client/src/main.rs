@@ -154,7 +154,7 @@ fn load_config() -> Result<ClientConfig> {
         builder = builder.file(path);
     }
 
-    let config = builder.load().map_err(|e| anyhow!("Config load failed: {e}"))?;
+    let config = builder.load().context("Config load failed")?;
 
     CLIENT_CONFIG
         .set(config.clone())
@@ -202,21 +202,19 @@ async fn handle_server_event(_: Arc<WsIoClientSession>, data: Arc<ClipboardEvent
     let key = CRYPTO_KEY.get().context("Crypto key not initialized")?;
 
     // Decrypt content
-    let plaintext = decrypt(key, &data.nonce, &data.content).map_err(|e| anyhow!("Decryption failed: {e}"))?;
+    let plaintext = decrypt(key, &data.nonce, &data.content).context("Decryption failed")?;
 
     // Deserialize ClipboardContent
-    let content: ClipboardContent = from_bytes(&plaintext).map_err(|e| anyhow!("Deserialize failed: {e}"))?;
+    let content = from_bytes(&plaintext).context("Deserialize clipboard content failed")?;
 
     // Update LAST_CONTENT before writing to local clipboard
     *LAST_CONTENT.write().await = plaintext.clone();
 
     // Write to local clipboard based on type
-    let mut clipboard = Clipboard::new().map_err(|e| anyhow!("Clipboard init error: {e}"))?;
+    let mut clipboard = Clipboard::new().context("Clipboard init failed")?;
     match &content {
         ClipboardContent::Text(text) => {
-            clipboard
-                .set_text(text)
-                .map_err(|e| anyhow!("Clipboard write error: {e}"))?;
+            clipboard.set_text(text).context("Clipboard write failed")?;
 
             tracing::info!("Received clipboard from server: {} bytes", plaintext.len());
         }

@@ -7,6 +7,7 @@ use std::{
 };
 
 use anyhow::{
+    Context,
     Result,
     anyhow,
 };
@@ -97,7 +98,7 @@ fn load_config() -> Result<ServerConfig> {
         builder = builder.file(path);
     }
 
-    let config = builder.load().map_err(|e| anyhow!("Config load failed: {e}"))?;
+    let config = builder.load().context("Config load failed")?;
 
     SERVER_CONFIG
         .set(config.clone())
@@ -117,22 +118,24 @@ fn setup_server_layer() -> WsIoServerLayer {
 // ================================================================================================
 
 async fn run_server(cancel: CancellationToken) -> Result<()> {
-    let config = SERVER_CONFIG
-        .get()
-        .ok_or_else(|| anyhow!("Server config not initialized"))?;
+    let config = SERVER_CONFIG.get().context("Server config not initialized")?;
 
     let addr = format!("{}:{}", config.host, config.port);
 
     tracing::info!("Starting server on {addr}");
 
     let app = Router::new().layer(setup_server_layer());
-    let listener = TcpListener::bind(&addr).await?;
+    let listener = TcpListener::bind(&addr).await.context("Failed to bind TCP listener")?;
 
-    tracing::info!("Listening on {}", listener.local_addr()?);
+    tracing::info!(
+        "Listening on {}",
+        listener.local_addr().context("Failed to get local address")?
+    );
 
     axum::serve(listener, app)
         .with_graceful_shutdown(async move { cancel.cancelled().await })
-        .await?;
+        .await
+        .context("Server error")?;
 
     tracing::info!("Server stopped");
     Ok(())

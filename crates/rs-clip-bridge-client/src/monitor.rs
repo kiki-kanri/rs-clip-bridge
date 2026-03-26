@@ -4,6 +4,7 @@ use std::{
 };
 
 use anyhow::{
+    Context,
     Result,
     anyhow,
 };
@@ -64,7 +65,7 @@ pub fn spawn_clipboard_monitor(tx: UnboundedSender<ClipboardContent>) {
     spawn(move || {
         if let Err(e) = (|| -> Result<()> {
             let monitor = ClipboardMonitor::new(tx)?;
-            Master::new(monitor).map_err(|_| anyhow!("Master init failed"))?.run()?;
+            Master::new(monitor).context("Master init failed")?.run()?;
             Ok(())
         })() {
             tracing::error!("Clipboard monitor error: {e}");

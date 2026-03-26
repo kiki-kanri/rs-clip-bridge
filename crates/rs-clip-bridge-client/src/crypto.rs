@@ -42,7 +42,7 @@ pub fn encrypt(key: &Key, plaintext: &[u8]) -> Result<(Vec<u8>, Vec<u8>)> {
 
     let content_with_tag = cipher
         .encrypt(nonce, plaintext)
-        .map_err(|e| anyhow!("Encryption failed: {}", e))?;
+        .map_err(|e| anyhow!("Encryption failed: {e}"))?;
 
     Ok((nonce_bytes.to_vec(), content_with_tag))
 }
@@ -59,7 +59,7 @@ pub fn decrypt(key: &Key, nonce: &[u8], content_with_tag: &[u8]) -> Result<Vec<u
 
     cipher
         .decrypt(nonce, content_with_tag)
-        .map_err(|e| anyhow!("Decryption failed: {}", e))
+        .map_err(|e| anyhow!("Decryption failed: {e}"))
 }
 
 // ================================================================================================
