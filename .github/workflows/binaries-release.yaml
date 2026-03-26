@@ -1,4 +1,4 @@
-name: Auto compile
+name: Binaries Release
 
 on:
   push:
