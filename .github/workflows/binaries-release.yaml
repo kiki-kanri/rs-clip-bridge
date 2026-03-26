@@ -7,6 +7,10 @@ on:
       - "rs-clip-bridge-server-v*"
   workflow_dispatch: null
 
+concurrency:
+  group: binaries-release
+  cancel-in-progress: true
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 

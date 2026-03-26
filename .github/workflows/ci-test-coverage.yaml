@@ -8,7 +8,7 @@ on:
   workflow_dispatch: null
 
 concurrency:
-  group: test-and-upload-coverage-on-release
+  group: ci-test-and-coverage
   cancel-in-progress: true
 
 jobs:
