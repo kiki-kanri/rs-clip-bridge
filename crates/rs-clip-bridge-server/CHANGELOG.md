@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.3 - 2026-03-26 03:50
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.1.2...rs-clip-bridge-server-v0.1.3)
+
+### 📖 Documentation
+
+- update README ([8c935f4](https://github.com/ws-io/ws.io-rs/commit/8c935f4))
+- update README ([ad507a1](https://github.com/ws-io/ws.io-rs/commit/ad507a1))
+
 ## 0.1.2 - 2026-03-26 02:11
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.1.1...rs-clip-bridge-server-v0.1.2)
