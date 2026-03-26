@@ -26,26 +26,26 @@ rs-clip-bridge
 
 ## Installation
 
-### Prerequisites
+### Pre-built Binaries
 
-- Rust 1.82+ (Edition 2024)
-- Cargo
-
-### Build from Source
+Download from the [Latest Release](https://github.com/kiki-kanri/rs-clip-bridge/releases/latest):
 
 ```bash
-git clone https://github.com/kiki-kanri/rs-clip-bridge.git
-cd rs-clip-bridge
-cargo b -r
-```
+# Linux x86_64 (gnu)
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-client-x86_64-unknown-linux-gnu -o rs-clip-bridge-client
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-server-x86_64-unknown-linux-gnu -o rs-clip-bridge-server
 
-Binaries will be available at `target/release/rs-clip-bridge-client` and `target/release/rs-clip-bridge-server`.
+# Linux x86_64 (musl)
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-client-x86_64-unknown-linux-musl -o rs-clip-bridge-client
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-server-x86_64-unknown-linux-musl -o rs-clip-bridge-server
 
-### Cargo Install
+# Linux ARM64
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-client-aarch64-unknown-linux-gnu -o rs-clip-bridge-client
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-server-aarch64-unknown-linux-gnu -o rs-clip-bridge-server
 
-```bash
-cargo install rs-clip-bridge-client
-cargo install rs-clip-bridge-server
+# Windows x86_64
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-client-x86_64-pc-windows-msvc.exe -o rs-clip-bridge-client.exe
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-server-x86_64-pc-windows-msvc.exe -o rs-clip-bridge-server.exe
 ```
 
 ### Docker
@@ -55,14 +55,17 @@ cargo install rs-clip-bridge-server
 docker build -t rs-clip-bridge-server -f crates/rs-clip-bridge-server/Dockerfile .
 ```
 
-### GitHub Actions
+### Build from Source
 
-Pre-built binaries are available from the [Auto compile workflow](https://github.com/kiki-kanri/rs-clip-bridge/actions/workflows/auto-compile.yaml):
+Requires Rust 1.82+ and Cargo.
 
 ```bash
-# Download from workflow artifacts
-# Select a run → Artifacts → download bin-<target>
+git clone https://github.com/kiki-kanri/rs-clip-bridge.git
+cd rs-clip-bridge
+cargo b -r
 ```
+
+Binaries will be available at `target/release/rs-clip-bridge-client` and `target/release/rs-clip-bridge-server`.
 
 ## Usage
 

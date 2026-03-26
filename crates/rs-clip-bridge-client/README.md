@@ -20,18 +20,35 @@ Cross-platform clipboard sync client for rs-clip-bridge. Monitors local clipboar
 
 ## Installation
 
-### Prerequisites
+### Pre-built Binaries
 
-- Rust 1.82+ (Edition 2024)
-- Platform-specific clipboard dependencies:
-  - **Linux**: X11 development libraries (`libx11-dev`)
-  - **macOS**: Xcode command line tools
-  - **Windows**: Visual Studio Build Tools
-- Platform-specific TLS backend (selected by feature):
-  - **Default (`rustls-ring`)**: Pure Rust TLS via `ring` crypto — no system dependencies
-  - **`rustls-aws-lc-rs`**: Uses AWS LC-RS crypto backend
+Download from the [Latest Release](https://github.com/kiki-kanri/rs-clip-bridge/releases/latest):
+
+```bash
+# Linux x86_64 (gnu)
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-client-x86_64-unknown-linux-gnu -o rs-clip-bridge-client
+
+# Linux x86_64 (musl)
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-client-x86_64-unknown-linux-musl -o rs-clip-bridge-client
+
+# Linux ARM64
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-client-aarch64-unknown-linux-gnu -o rs-clip-bridge-client
+
+# Windows x86_64
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-client-x86_64-pc-windows-msvc.exe -o rs-clip-bridge-client.exe
+```
 
 ### Build from Source
+
+Requires Rust 1.82+ and platform-specific build dependencies:
+
+- **Linux**: X11 development libraries (`libx11-dev`)
+- **macOS**: Xcode command line tools
+- **Windows**: Visual Studio Build Tools
+
+TLS backend is selected via feature flag:
+- **Default (`rustls-ring`)**: Pure Rust TLS via `ring` crypto
+- **`rustls-aws-lc-rs`**: Uses AWS LC-RS crypto backend
 
 ```bash
 # Default (ring backend)
@@ -45,15 +62,6 @@ cargo b -r -p rs-clip-bridge-client --features rustls-aws-lc-rs
 
 ```bash
 cargo install rs-clip-bridge-client
-```
-
-### GitHub Actions
-
-Pre-built binaries are available from the [Auto compile workflow](https://github.com/kiki-kanri/rs-clip-bridge/actions/workflows/auto-compile.yaml):
-
-```bash
-# Download from workflow artifacts
-# Select a run → Artifacts → download bin-<target>
 ```
 
 ## Usage

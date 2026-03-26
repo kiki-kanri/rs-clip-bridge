@@ -20,21 +20,36 @@ WebSocket server for rs-clip-bridge clipboard synchronization. Relays encrypted 
 
 ## Installation
 
-### Prerequisites
+### Pre-built Binaries
 
-- Rust 1.82+ (Edition 2024)
-- OpenSSL development libraries (for TLS support)
+Download from the [Latest Release](https://github.com/kiki-kanri/rs-clip-bridge/releases/latest):
+
+```bash
+# Linux x86_64 (gnu)
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-server-x86_64-unknown-linux-gnu -o rs-clip-bridge-server
+
+# Linux x86_64 (musl)
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-server-x86_64-unknown-linux-musl -o rs-clip-bridge-server
+
+# Linux ARM64
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-server-aarch64-unknown-linux-gnu -o rs-clip-bridge-server
+
+# Windows x86_64
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-server-x86_64-pc-windows-msvc.exe -o rs-clip-bridge-server.exe
+```
+
+### Build from Source
+
+Requires Rust 1.82+ and Cargo.
+
+```bash
+cargo b -r -p rs-clip-bridge-server
+```
 
 ### Cargo Install
 
 ```bash
 cargo install rs-clip-bridge-server
-```
-
-### Build from Source
-
-```bash
-cargo b -r -p rs-clip-bridge-server
 ```
 
 ### Docker
@@ -47,19 +62,10 @@ docker build -t rs-clip-bridge-server -f crates/rs-clip-bridge-server/Dockerfile
 docker run -d \
   --name rs-clip-bridge-server \
   -p 8000:8000 \
-  -e RS_CLIP_AUTH_KEYS=***,*** \
+  -e RS_CLIP_AUTH_KEYS=a,b \
   -e RS_CLIP_SERVER_HOST=0.0.0.0 \
   -e RS_CLIP_SERVER_PORT=8000 \
   rs-clip-bridge-server
-```
-
-### GitHub Actions
-
-Pre-built binaries are available from the [Auto compile workflow](https://github.com/kiki-kanri/rs-clip-bridge/actions/workflows/auto-compile.yaml):
-
-```bash
-# Download from workflow artifacts
-# Select a run → Artifacts → download bin-<target>
 ```
 
 ## Usage
