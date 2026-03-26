@@ -28,7 +28,7 @@ rs-clip-bridge
 
 ### Pre-built Binaries
 
-Download from the [Latest Release](https://github.com/kiki-kanri/rs-clip-bridge/releases/latest):
+Download from the [Latest Release](https://github.com/kiki-kanri/rs-clip-bridge/releases/tag/latest):
 
 ```bash
 # Linux x86_64 (gnu)
