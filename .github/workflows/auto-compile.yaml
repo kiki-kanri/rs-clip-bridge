@@ -2,15 +2,16 @@ name: Auto compile
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/auto-compile.yaml"
-      - "crates/*/src/**"
-      - "crates/*/Cargo.toml"
-      - "Cargo.toml"
-      - "Cargo.lock"
-  workflow_dispatch: null
+    tags:
+      - "rs-clip-bridge-client-v*"
+      - "rs-clip-bridge-server-v*"
+  workflow_dispatch:
+    inputs:
+      upload_to_release:
+        description: "Try to upload to release (Manual trigger)"
+        required: true
+        type: boolean
+        default: false
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -81,15 +82,44 @@ jobs:
             cargo b -r --target ${{ matrix.target }} --workspace
           fi
 
+      - name: Prepare Artifacts (Rename for clarity)
+        shell: bash
+        run: |
+          mkdir -p ./output
+          EXT=""
+          [[ "${{ matrix.target }}" == *"windows"* ]] && EXT=".exe"
+
+          cp target/${{ matrix.target }}/release/rs-clip-bridge-client$EXT ./output/rs-clip-bridge-client-${{ matrix.target }}$EXT || true
+          cp target/${{ matrix.target }}/release/rs-clip-bridge-server$EXT ./output/rs-clip-bridge-server-${{ matrix.target }}$EXT || true
+
       - name: Upload Binaries
         uses: actions/upload-artifact@v7
         with:
-          name: bin-${{ matrix.target }}
-          path: |
-            target/${{ matrix.target }}/release/*.exe
-            target/${{ matrix.target }}/release/rs-clip-bridge-client
-            target/${{ matrix.target }}/release/rs-clip-bridge-server
-            !target/${{ matrix.target }}/release/*.d
-            !target/${{ matrix.target }}/release/deps/
+          name: binaries-${{ matrix.target }}
+          path: ./output/*
           overwrite: true
-          retention-days: 3
+          retention-days: 1
+
+  publish:
+    name: Update Release Assets
+    needs: build
+    if: |
+      github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') ||
+      (github.event_name == 'workflow_dispatch' && inputs.upload_to_release == true)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all binaries
+        uses: actions/download-artifact@v8
+        with:
+          path: ./all-binaries
+          merge-multiple: true
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: ./all-binaries/*
+          overwrite: true
+          body_path: ""
