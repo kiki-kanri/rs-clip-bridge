@@ -46,6 +46,10 @@ curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs
 # Windows x86_64
 curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-client-x86_64-pc-windows-msvc.exe -o rs-clip-bridge-client.exe
 curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-server-x86_64-pc-windows-msvc.exe -o rs-clip-bridge-server.exe
+
+# Windows ARM64
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-client-aarch64-pc-windows-msvc.exe -o rs-clip-bridge-client.exe
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-server-aarch64-pc-windows-msvc.exe -o rs-clip-bridge-server.exe
 ```
 
 ### Docker

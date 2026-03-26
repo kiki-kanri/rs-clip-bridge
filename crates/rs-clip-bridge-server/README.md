@@ -36,6 +36,9 @@ curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs
 
 # Windows x86_64
 curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-server-x86_64-pc-windows-msvc.exe -o rs-clip-bridge-server.exe
+
+# Windows ARM64
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-server-aarch64-pc-windows-msvc.exe -o rs-clip-bridge-server.exe
 ```
 
 ### Build from Source
@@ -130,9 +133,9 @@ The server relays `ClipboardEventData` messages between clients in the same chan
 ```rust
 struct ClipboardEventData {
     device_name: Option<String>,
-    content: Vec<u8>,      // Encrypted: [ciphertext || poly1305_tag]
-    nonce: Vec<u8>,       // 12 bytes
-    timestamp: u64,       // Unix timestamp in milliseconds
+    content: Vec<u8>,   // Encrypted: [ciphertext || poly1305_tag]
+    nonce: Vec<u8>,     // 12 bytes
+    timestamp: u64,     // Unix timestamp in milliseconds
 }
 ```
 
@@ -143,7 +146,6 @@ The server exposes a single namespace at `/` for all clipboard events.
 ## License
 
 [MIT License](../../LICENSE)
-
 
 <!-- Badges -->
 [codecov-href]: https://codecov.io/gh/kiki-kanri/rs-clip-bridge

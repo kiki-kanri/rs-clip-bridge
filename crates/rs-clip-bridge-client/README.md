@@ -36,6 +36,9 @@ curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs
 
 # Windows x86_64
 curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-client-x86_64-pc-windows-msvc.exe -o rs-clip-bridge-client.exe
+
+# Windows ARM64
+curl -L https://github.com/kiki-kanri/rs-clip-bridge/releases/download/latest/rs-clip-bridge-client-aarch64-pc-windows-msvc.exe -o rs-clip-bridge-client.exe
 ```
 
 ### Build from Source
