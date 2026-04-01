@@ -8,10 +8,6 @@ use std::{
         LazyLock,
         OnceLock,
     },
-    time::{
-        SystemTime,
-        UNIX_EPOCH,
-    },
 };
 
 use anyhow::{
@@ -34,16 +30,10 @@ use kikiutils::{
         make_tracing_fmt_layer_with_local_time,
     },
 };
-use postcard::{
-    from_bytes,
-    to_allocvec,
-};
+use postcard::from_bytes;
 use tokio::{
     select,
-    sync::mpsc::{
-        UnboundedReceiver,
-        unbounded_channel,
-    },
+    sync::mpsc::unbounded_channel,
 };
 use tokio_util::sync::CancellationToken;
 use tracing::level_filters::LevelFilter;
@@ -58,6 +48,7 @@ mod cli;
 mod config;
 mod crypto;
 mod monitor;
+mod sender;
 mod state;
 mod types;
 
@@ -72,13 +63,12 @@ use self::{
         confique_client_config_layer::ClientConfigLayer,
     },
     crypto::{
-        compress,
         decompress,
         decrypt,
-        encrypt,
         parse_key,
     },
     monitor::spawn_clipboard_monitor,
+    sender::run_clipboard_sender,
     state::LAST_CONTENT_BYTES,
     types::{
         ClipboardContent,
@@ -244,87 +234,6 @@ async fn handle_server_event(_: Arc<WsIoClientSession>, data: Arc<ClipboardEvent
     }
 
     Ok(())
-}
-
-async fn run_clipboard_sender(mut rx: UnboundedReceiver<ClipboardContent>, client: WsIoClient) {
-    let key = match CRYPTO_KEY.get() {
-        Some(k) => k,
-        None => {
-            tracing::error!("Crypto key not initialized");
-            return;
-        }
-    };
-
-    loop {
-        select! {
-            _ = APP_SHUTDOWN_TOKEN.cancelled() => break,
-            Some(content) = rx.recv() => {
-                // Serialize ClipboardContent to bytes
-                let serialized = match to_allocvec(&content) {
-                    Ok(v) => v,
-                    Err(e) => {
-                        tracing::error!("Serialize failed: {e}");
-                        continue;
-                    }
-                };
-
-                // Skip if content matches LAST_CONTENT_BYTES (circular write prevention)
-                if *LAST_CONTENT_BYTES.read().await == serialized {
-                    continue;
-                }
-
-                // Compress if content exceeds minimum size threshold
-                let min_size = CLIENT_CONFIG.get().expect("CLIENT_CONFIG must be initialized").min_compress_size_bytes;
-                let to_encrypt = if serialized.len() >= min_size {
-                    let compressed = match compress(&serialized) {
-                        Ok(v) => v,
-                        Err(e) => {
-                            tracing::error!("Compression failed: {e}");
-                            continue;
-                        }
-                    };
-
-                    let mut data = vec![0x01u8]; // magic: zstd compressed
-                    data.extend(compressed);
-                    data
-                } else {
-                    let mut data = vec![0x00u8]; // magic: uncompressed
-                    data.extend(serialized.clone());
-                    data
-                };
-
-                let timestamp = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .map(|d| d.as_millis() as u64)
-                    .unwrap_or(0);
-
-                // Encrypt serialized + compressed content
-                let (nonce, encrypted) = match encrypt(key, &to_encrypt) {
-                    Ok(v) => v,
-                    Err(e) => {
-                        tracing::error!("Encryption failed: {e}");
-                        continue;
-                    }
-                };
-
-                let event_data = ClipboardEventData {
-                    device_name: None,
-                    content: encrypted,
-                    nonce,
-                    timestamp,
-                };
-
-                // Update LAST_CONTENT_BYTES before sending
-                let serialized_size = serialized.len();
-                *LAST_CONTENT_BYTES.write().await = serialized;
-
-                match client.emit::<ClipboardEventData>("event", Some(&event_data)).await {
-                    Ok(_) => tracing::info!("Sent clipboard: {serialized_size} bytes"),
-                    Err(e) => tracing::error!("Failed to emit clipboard event: {e}"),
-                }
-            }
-        }
-    }
 }
 
 // ================================================================================================
