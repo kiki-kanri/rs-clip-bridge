@@ -59,7 +59,7 @@ impl ClipboardMonitor {
             ctx: Clipboard::new().map_err(|e| anyhow!("Clipboard init error: {e}"))?,
             last_text: String::new(),
             last_image: None,
-            max_image_size_bytes: max_image_size_bytes,
+            max_image_size_bytes,
             tx,
         })
     }
@@ -86,11 +86,11 @@ impl ClipboardMonitor {
                 let same_as_last = self
                     .last_image
                     .as_ref()
-                    .map_or(false, |(b, h, w)| b.len() == bytes.len() && *h == height && *w == width);
+                    .is_some_and(|(b, h, w)| b.len() == bytes.len() && *h == height && *w == width);
 
                 if same_as_last {
                     // Same dimensions — do full byte comparison only if size also matches
-                    let identical = self.last_image.as_ref().map_or(false, |(b, _, _)| *b == bytes);
+                    let identical = self.last_image.as_ref().is_some_and(|(b, _, _)| *b == bytes);
                     if identical {
                         return CallbackResult::Next;
                     }
