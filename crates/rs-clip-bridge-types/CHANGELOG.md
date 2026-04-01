@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.1 - 2026-04-01 06:48
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-types-v0.1.0...rs-clip-bridge-types-v0.1.1)
+
+### 🚀 Enhancements
+
+- image copy features ([93f2c01](https://github.com/ws-io/ws.io-rs/commit/93f2c01))
+
 ## 0.1.0 - 2026-03-25 17:41
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/releases/tag/rs-clip-bridge-types-v0.1.0)

@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.4 - 2026-04-01 06:48
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-client-v0.1.3...rs-clip-bridge-client-v0.1.4)
+
+### 🏡 Chore
+
+- lint code ([6cc4687](https://github.com/ws-io/ws.io-rs/commit/6cc4687))
+
+### 💅 Refactors
+
+- tidy up code ([ba00472](https://github.com/ws-io/ws.io-rs/commit/ba00472))
+
+### 📖 Documentation
+
+- update README ([f700174](https://github.com/ws-io/ws.io-rs/commit/f700174))
+
+### 🚀 Enhancements
+
+- image copy features ([93f2c01](https://github.com/ws-io/ws.io-rs/commit/93f2c01))
+
 ## 0.1.3 - 2026-03-26 03:50
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-client-v0.1.2...rs-clip-bridge-client-v0.1.3)
