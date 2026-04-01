@@ -10,7 +10,11 @@ use serde::{
 /// Clipboard content type
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub enum ClipboardContent {
-    Image(Vec<u8>),
+    Image {
+        bytes: Vec<u8>,
+        height: usize,
+        width: usize,
+    },
     Text(String),
     Raw(Vec<u8>),
 }
@@ -75,7 +79,12 @@ mod tests {
         let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
         assert_eq!(decoded, raw);
 
-        let image = ClipboardContent::Image(vec![0x89, 0x50, 0x4e]); // PNG magic
+        let image = ClipboardContent::Image {
+            bytes: vec![0x89, 0x50, 0x4e],
+            height: 1,
+            width: 1,
+        }; // PNG magic
+
         let encoded = to_allocvec(&image).unwrap();
         let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
         assert_eq!(decoded, image);

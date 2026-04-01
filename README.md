@@ -12,7 +12,7 @@ A blazingly fast, cross-platform clipboard synchronizer using WebSockets with en
 - **End-to-End Encryption** — All clipboard data is encrypted using ChaCha20-Poly1305 before transmission
 - **Channel Isolation** — Devices are organized into channels, ensuring clipboard data only syncs within designated groups
 - **Cross-Platform** — Works on Linux (X11), macOS, and Windows
-- **Multiple Data Types** — Supports text and binary clipboard content (image support planned)
+- **Multiple Data Types** — Supports text, images, and binary clipboard content
 - **WebSocket Transport** — Reliable, connection-oriented communication with automatic reconnection
 
 ## Architecture
@@ -138,6 +138,8 @@ Both client and server support configuration via TOML files and environment vari
 | `RS_CLIP_ENCRYPT_KEY` | Encryption key (64 hex chars / 32 bytes) |
 | `RS_CLIP_SERVER_URL` | WebSocket server URL |
 | `RS_CLIP_DISPLAY` | X11 display name (Linux only) |
+| `RS_CLIP_MAX_IMAGE_SIZE_BYTES` | Maximum image size to sync (default: 10485760) |
+| `RS_CLIP_MIN_COMPRESS_SIZE_BYTES` | Minimum size to trigger compression (default: 1024) |
 
 #### Server Environment Variables
 

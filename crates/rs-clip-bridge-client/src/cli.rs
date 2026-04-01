@@ -43,6 +43,14 @@ pub struct Cli {
     #[arg(short = 'K', long, env = "RS_CLIP_ENCRYPT_KEY")]
     pub encrypt_key: Option<String>,
 
+    /// Maximum image size in bytes to sync (e.g., 5242880 for 5 MB, default: 10485760 for 10 MB)
+    #[arg(long, env = "RS_CLIP_MAX_IMAGE_SIZE_BYTES")]
+    pub max_image_size_bytes: Option<usize>,
+
+    /// Minimum size in bytes to trigger compression (default: 1024)
+    #[arg(long, env = "RS_CLIP_MIN_COMPRESS_SIZE_BYTES")]
+    pub min_compress_size_bytes: Option<usize>,
+
     /// WebSocket server URL (e.g., ws://127.0.0.1:8080 or wss://example.com)
     #[arg(short, long, value_name = "URL", env = "RS_CLIP_SERVER_URL")]
     pub server_url: Option<String>,

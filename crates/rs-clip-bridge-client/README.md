@@ -99,6 +99,10 @@ Edit `config.toml`:
 server_url = "ws://127.0.0.1:8000"
 channel_id = "my-channel"
 encrypt_key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+# Optional settings with defaults
+# max_image_size_bytes = 10485760  # 10 MB, maximum image size to sync
+# min_compress_size_bytes = 1024   # 1 KB, minimum size to trigger compression
 ```
 
 Run with config:
@@ -116,6 +120,8 @@ rs-clip-bridge-client --config config.toml
 | `--encrypt-key` | Encryption key (64 hex chars / 32 bytes) |
 | `--auth-key` | Authentication key for server access |
 | `--display` | X11 display name (Linux only, e.g., `:0`) |
+| `--max-image-size-bytes` | Maximum image size to sync (default: 10485760) |
+| `--min-compress-size-bytes` | Minimum size to trigger compression (default: 1024) |
 | `--config` | Path to TOML configuration file |
 | `generate-config-template` | Generate a configuration file template |
 
@@ -128,6 +134,8 @@ rs-clip-bridge-client --config config.toml
 | `RS_CLIP_ENCRYPT_KEY` | Encryption key (64 hex chars / 32 bytes) |
 | `RS_CLIP_AUTH_KEY` | Authentication key for server access |
 | `RS_CLIP_DISPLAY` | X11 display name (Linux only) |
+| `RS_CLIP_MAX_IMAGE_SIZE_BYTES` | Maximum image size to sync |
+| `RS_CLIP_MIN_COMPRESS_SIZE_BYTES` | Minimum size to trigger compression |
 | `RS_CLIP_CLIENT_CONFIG` | Path to configuration file |
 
 ## Security

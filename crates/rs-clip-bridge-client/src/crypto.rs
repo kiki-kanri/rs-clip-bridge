@@ -3,6 +3,11 @@
 //! The encrypt_key is a 64-character hex string (32 bytes).
 //! A random 12-byte nonce is generated for each encryption.
 
+use std::{
+    io::copy,
+    thread::available_parallelism,
+};
+
 use anyhow::{
     Result,
     anyhow,
@@ -19,6 +24,10 @@ use chacha20poly1305::{
 };
 use hex::decode_to_slice;
 use rand::random;
+use zstd::stream::{
+    Encoder,
+    decode_all,
+};
 
 /// Parse a 64-char hex string into a 32-byte key
 pub fn parse_key(hex_key: &str) -> Result<Key> {
@@ -60,6 +69,25 @@ pub fn decrypt(key: &Key, nonce: &[u8], content_with_tag: &[u8]) -> Result<Vec<u
     cipher
         .decrypt(nonce, content_with_tag)
         .map_err(|e| anyhow!("Decryption failed: {e}"))
+}
+
+/// Compress data using zstd with multi-threading (zstdmt).
+/// Uses level 1 (fast) for near-lz4 speed with better compression.
+pub fn compress(data: &[u8]) -> Result<Vec<u8>> {
+    let workers = available_parallelism().map(|n| n.get()).unwrap_or(1);
+    let mut result = Vec::new();
+
+    let mut encoder = Encoder::new(&mut result, 1)?;
+    encoder.multithread(workers as u32)?;
+    copy(&mut &data[..], &mut encoder)?;
+    encoder.finish()?;
+
+    Ok(result)
+}
+
+/// Decompress zstd-compressed data.
+pub fn decompress(data: &[u8]) -> Result<Vec<u8>> {
+    decode_all(data).map_err(|e| anyhow!("Decompression failed: {e}"))
 }
 
 // ================================================================================================

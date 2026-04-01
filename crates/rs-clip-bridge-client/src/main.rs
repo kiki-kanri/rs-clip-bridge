@@ -1,6 +1,7 @@
 #[cfg(unix)]
 use std::env::set_var;
 use std::{
+    borrow::Cow,
     process::exit,
     sync::{
         Arc,
@@ -18,7 +19,10 @@ use anyhow::{
     Result,
     anyhow,
 };
-use arboard::Clipboard;
+use arboard::{
+    Clipboard,
+    ImageData,
+};
 use chacha20poly1305::Key;
 use clap::Parser;
 use confique::Config;
@@ -68,12 +72,14 @@ use self::{
         confique_client_config_layer::ClientConfigLayer,
     },
     crypto::{
+        compress,
+        decompress,
         decrypt,
         encrypt,
         parse_key,
     },
     monitor::spawn_clipboard_monitor,
-    state::LAST_CONTENT,
+    state::LAST_CONTENT_BYTES,
     types::{
         ClipboardContent,
         ClipboardEventData,
@@ -137,6 +143,8 @@ fn load_config() -> Result<ClientConfig> {
         #[cfg(unix)]
         display: cli.display,
         encrypt_key: cli.encrypt_key,
+        max_image_size_bytes: cli.max_image_size_bytes,
+        min_compress_size_bytes: cli.min_compress_size_bytes,
         server_url: cli.server_url,
     };
 
@@ -195,11 +203,18 @@ async fn handle_server_event(_: Arc<WsIoClientSession>, data: Arc<ClipboardEvent
     // Decrypt content
     let plaintext = decrypt(key, &data.nonce, &data.content).context("Decryption failed")?;
 
-    // Deserialize ClipboardContent
-    let content = from_bytes(&plaintext).context("Deserialize clipboard content failed")?;
+    // Decompress if needed (magic byte: 0x01 = zstd, 0x00 = uncompressed)
+    let decompressed = if plaintext.first() == Some(&0x01) {
+        decompress(&plaintext[1..]).context("Decompression failed")?
+    } else {
+        plaintext[1..].to_vec()
+    };
 
-    // Update LAST_CONTENT before writing to local clipboard
-    *LAST_CONTENT.write().await = plaintext.clone();
+    // Deserialize ClipboardContent
+    let content = from_bytes(&decompressed).context("Deserialize clipboard content failed")?;
+
+    // Update LAST_CONTENT_BYTES before writing to local clipboard
+    *LAST_CONTENT_BYTES.write().await = decompressed.clone();
 
     // Write to local clipboard based on type
     let mut clipboard = Clipboard::new().context("Clipboard init failed")?;
@@ -207,11 +222,25 @@ async fn handle_server_event(_: Arc<WsIoClientSession>, data: Arc<ClipboardEvent
         ClipboardContent::Text(text) => {
             clipboard.set_text(text).context("Clipboard write failed")?;
 
-            tracing::info!("Received clipboard from server: {} bytes", plaintext.len());
+            tracing::info!("Received clipboard from server: {} bytes", decompressed.len());
         }
-        ClipboardContent::Image(_) | ClipboardContent::Raw(_) => {
-            tracing::warn!("Image/Raw clipboard not yet supported");
+        ClipboardContent::Image { bytes, height, width } => {
+            clipboard
+                .set_image(ImageData {
+                    bytes: Cow::Borrowed(bytes),
+                    height: *height,
+                    width: *width,
+                })
+                .context("Image clipboard write failed")?;
+
+            tracing::info!(
+                "Received image from server: {}x{}, {} bytes",
+                width,
+                height,
+                bytes.len()
+            );
         }
+        ClipboardContent::Raw(_) => tracing::warn!("Raw clipboard not supported"),
     }
 
     Ok(())
@@ -239,18 +268,38 @@ async fn run_clipboard_sender(mut rx: UnboundedReceiver<ClipboardContent>, clien
                     }
                 };
 
-                // Skip if content matches LAST_CONTENT (circular write prevention)
-                if *LAST_CONTENT.read().await == serialized {
+                // Skip if content matches LAST_CONTENT_BYTES (circular write prevention)
+                if *LAST_CONTENT_BYTES.read().await == serialized {
                     continue;
                 }
+
+                // Compress if content exceeds minimum size threshold
+                let min_size = CLIENT_CONFIG.get().expect("CLIENT_CONFIG must be initialized").min_compress_size_bytes;
+                let to_encrypt = if serialized.len() >= min_size {
+                    let compressed = match compress(&serialized) {
+                        Ok(v) => v,
+                        Err(e) => {
+                            tracing::error!("Compression failed: {e}");
+                            continue;
+                        }
+                    };
+
+                    let mut data = vec![0x01u8]; // magic: zstd compressed
+                    data.extend(compressed);
+                    data
+                } else {
+                    let mut data = vec![0x00u8]; // magic: uncompressed
+                    data.extend(serialized.clone());
+                    data
+                };
 
                 let timestamp = SystemTime::now()
                     .duration_since(UNIX_EPOCH)
                     .map(|d| d.as_millis() as u64)
                     .unwrap_or(0);
 
-                // Encrypt serialized content
-                let (nonce, encrypted) = match encrypt(key, &serialized) {
+                // Encrypt serialized + compressed content
+                let (nonce, encrypted) = match encrypt(key, &to_encrypt) {
                     Ok(v) => v,
                     Err(e) => {
                         tracing::error!("Encryption failed: {e}");
@@ -265,9 +314,9 @@ async fn run_clipboard_sender(mut rx: UnboundedReceiver<ClipboardContent>, clien
                     timestamp,
                 };
 
-                // Update LAST_CONTENT before sending
+                // Update LAST_CONTENT_BYTES before sending
                 let serialized_size = serialized.len();
-                *LAST_CONTENT.write().await = serialized;
+                *LAST_CONTENT_BYTES.write().await = serialized;
 
                 match client.emit::<ClipboardEventData>("event", Some(&event_data)).await {
                     Ok(_) => tracing::info!("Sent clipboard: {serialized_size} bytes"),
@@ -320,7 +369,7 @@ async fn main() -> Result<()> {
     #[cfg(unix)]
     setup_display(&config.display);
 
-    let ws_client = setup_ws_client(config)?;
+    let ws_client = setup_ws_client(config.clone())?;
 
     // Register event handler before connecting
     ws_client.on("event", handle_server_event);
@@ -328,7 +377,7 @@ async fn main() -> Result<()> {
 
     // Spawn clipboard monitor
     let (tx, rx) = unbounded_channel();
-    spawn_clipboard_monitor(tx);
+    spawn_clipboard_monitor(tx, config.max_image_size_bytes);
 
     // --- Runtime: spawn tasks ---
     let ws_client_clone = ws_client.clone();
