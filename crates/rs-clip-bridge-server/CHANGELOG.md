@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.5 - 2026-04-02 19:04
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.1.4...rs-clip-bridge-server-v0.1.5)
+
+### ✅ Tests
+
+- add more units ([72fcda9](https://github.com/ws-io/ws.io-rs/commit/72fcda9))
+
+### 🏡 Chore
+
+- add script to build docker image and publish ([d14c22a](https://github.com/ws-io/ws.io-rs/commit/d14c22a))
+
+### 💅 Refactors
+
+- remove `types` crate and move to client, as server only forwards bytes and does not need `ClipboardEventData` ([037f415](https://github.com/ws-io/ws.io-rs/commit/037f415))
+
 ## 0.1.4 - 2026-04-01 06:48
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.1.3...rs-clip-bridge-server-v0.1.4)
