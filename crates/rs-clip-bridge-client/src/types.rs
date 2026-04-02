@@ -99,4 +99,67 @@ mod tests {
         let decoded: ClipboardEventData = from_bytes(&encoded).unwrap();
         assert_eq!(decoded.device_name, None);
     }
+
+    #[test]
+    fn clipboard_content_large_image() {
+        let large_bytes = vec![0xabu8; 1024 * 1024];
+        let image = ClipboardContent::Image {
+            bytes: large_bytes.clone(),
+            height: 1920,
+            width: 1080,
+        };
+
+        let encoded = to_allocvec(&image).unwrap();
+        let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
+
+        match decoded {
+            ClipboardContent::Image { bytes, height, width } => {
+                assert_eq!(bytes, large_bytes);
+                assert_eq!(height, 1920);
+                assert_eq!(width, 1080);
+            }
+            _ => panic!("Expected Image variant"),
+        }
+    }
+
+    #[test]
+    fn clipboard_content_unicode_text() {
+        let texts = [
+            "Hello, World!",
+            "你好，世界！",
+            "🎉 🚀 🌙",
+            "Line1\nLine2\nLine3",
+            "Tab\there",
+        ];
+
+        for text in texts {
+            let content = ClipboardContent::Text(text.to_string());
+            let encoded = to_allocvec(&content).unwrap();
+            let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
+            assert_eq!(decoded, content);
+        }
+    }
+
+    #[test]
+    fn clipboard_content_raw_binary() {
+        let raw = ClipboardContent::Raw(vec![0x00, 0xff, 0x42, 0x13, 0x37]);
+        let encoded = to_allocvec(&raw).unwrap();
+        let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
+        assert_eq!(decoded, raw);
+    }
+
+    #[test]
+    fn clipboard_event_data_all_zeros() {
+        let data = ClipboardEventData {
+            device_name: None,
+            content: vec![0u8; 64],
+            nonce: vec![0u8; 12],
+            timestamp: 0,
+        };
+
+        let encoded = to_allocvec(&data).unwrap();
+        let decoded: ClipboardEventData = from_bytes(&encoded).unwrap();
+        assert_eq!(decoded.content.len(), 64);
+        assert!(decoded.device_name.is_none());
+    }
 }

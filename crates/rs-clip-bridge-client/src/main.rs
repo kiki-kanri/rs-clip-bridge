@@ -308,3 +308,44 @@ async fn main() -> Result<()> {
     tracing::info!("Shutdown complete");
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn client_config_default_max_image_size() {
+        let config = ClientConfig::builder()
+            .preloaded(ClientConfigLayer {
+                auth_key: None,
+                channel_id: Some("test".into()),
+                #[cfg(unix)]
+                display: None,
+                encrypt_key: Some("0".repeat(64)),
+                max_image_size_bytes: None,
+                min_compress_size_bytes: None,
+                server_url: Some("ws://localhost".into()),
+            })
+            .load()
+            .unwrap();
+        assert_eq!(config.max_image_size_bytes, 10485760);
+    }
+
+    #[test]
+    fn client_config_default_min_compress_size() {
+        let config = ClientConfig::builder()
+            .preloaded(ClientConfigLayer {
+                auth_key: None,
+                channel_id: Some("test".into()),
+                #[cfg(unix)]
+                display: None,
+                encrypt_key: Some("0".repeat(64)),
+                max_image_size_bytes: None,
+                min_compress_size_bytes: None,
+                server_url: Some("ws://localhost".into()),
+            })
+            .load()
+            .unwrap();
+        assert_eq!(config.min_compress_size_bytes, 1024);
+    }
+}

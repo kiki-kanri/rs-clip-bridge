@@ -60,3 +60,37 @@ pub fn run_generate_config_template(output: Option<PathBuf>) {
         None => print!("{}", content),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cli_default_host_and_port() {
+        let cli = Cli::try_parse_from(["rs-clip-bridge-server"]).unwrap();
+        assert_eq!(cli.host, Some("127.0.0.1".into()));
+        assert_eq!(cli.port, Some(8000));
+    }
+
+    #[test]
+    fn cli_override_host_and_port() {
+        let cli = Cli::try_parse_from(["rs-clip-bridge-server", "--host", "0.0.0.0", "--port", "9000"]).unwrap();
+        assert_eq!(cli.host, Some("0.0.0.0".into()));
+        assert_eq!(cli.port, Some(9000));
+    }
+
+    #[test]
+    fn cli_with_auth_keys() {
+        let cli = Cli::try_parse_from(["rs-clip-bridge-server", "--auth-keys", "key1,key2,key3"]).unwrap();
+        assert_eq!(cli.auth_keys, Some(vec!["key1".into(), "key2".into(), "key3".into()]));
+    }
+
+    #[test]
+    fn cli_generate_config_template_command() {
+        let cli = Cli::try_parse_from(["rs-clip-bridge-server", "generate-config-template"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Some(Commands::GenerateConfigTemplate { output: None })
+        ));
+    }
+}

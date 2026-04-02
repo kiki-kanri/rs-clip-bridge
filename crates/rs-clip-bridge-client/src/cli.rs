@@ -73,3 +73,57 @@ pub fn run_generate_config_template(output: Option<PathBuf>) {
         None => print!("{}", content),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cli_parse_required_args() {
+        let cli = Cli::try_parse_from([
+            "rs-clip-bridge-client",
+            "--server-url",
+            "ws://localhost:8080",
+            "--channel-id",
+            "test-channel",
+            "--encrypt-key",
+            &"0".repeat(64),
+        ])
+        .unwrap();
+        assert_eq!(cli.channel_id, Some("test-channel".into()));
+        assert_eq!(cli.server_url, Some("ws://localhost:8080".into()));
+        assert_eq!(cli.encrypt_key, Some("0".repeat(64)));
+    }
+
+    #[test]
+    fn cli_parse_all_optional_args() {
+        let cli = Cli::try_parse_from([
+            "rs-clip-bridge-client",
+            "--server-url",
+            "ws://localhost:8080",
+            "--channel-id",
+            "my-channel",
+            "--encrypt-key",
+            &"a".repeat(64),
+            "--auth-key",
+            "my-secret-key",
+            "--max-image-size-bytes",
+            "5242880",
+            "--min-compress-size-bytes",
+            "2048",
+        ])
+        .unwrap();
+        assert_eq!(cli.auth_key, Some("my-secret-key".into()));
+        assert_eq!(cli.max_image_size_bytes, Some(5242880));
+        assert_eq!(cli.min_compress_size_bytes, Some(2048));
+    }
+
+    #[test]
+    fn cli_generate_config_template_command() {
+        let cli = Cli::try_parse_from(["rs-clip-bridge-client", "generate-config-template"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Some(Commands::GenerateConfigTemplate { output: None })
+        ));
+    }
+}
