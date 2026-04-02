@@ -96,7 +96,7 @@ async fn send_clipboard(client: &WsIoClient, key: &chacha20poly1305::Key, conten
     let serialized_size = serialized.len();
     *LAST_CONTENT_BYTES.write().await = serialized;
 
-    match client.emit::<ClipboardEventData>("event", Some(&event_data)).await {
+    match client.emit::<Vec<u8>>("event", Some(&to_allocvec(&event_data)?)).await {
         Ok(_) => tracing::info!("Sent clipboard: {serialized_size} bytes"),
         Err(e) => tracing::error!("Failed to emit clipboard event: {e}"),
     }

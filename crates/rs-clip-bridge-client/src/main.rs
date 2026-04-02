@@ -187,8 +187,9 @@ fn setup_display(display: &Option<String>) {
 // Event Handlers
 // ================================================================================================
 
-async fn handle_server_event(_: Arc<WsIoClientSession>, data: Arc<ClipboardEventData>) -> Result<()> {
+async fn handle_server_event(_: Arc<WsIoClientSession>, data_bytes: Arc<Vec<u8>>) -> Result<()> {
     let key = CRYPTO_KEY.get().context("Crypto key not initialized")?;
+    let data = from_bytes::<ClipboardEventData>(&data_bytes)?;
 
     // Decrypt content
     let plaintext = decrypt(key, &data.nonce, &data.content).context("Decryption failed")?;

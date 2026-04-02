@@ -21,8 +21,7 @@ A blazingly fast, cross-platform clipboard synchronizer using WebSockets with en
 rs-clip-bridge
 ├── crates/
 │   ├── rs-clip-bridge-client/   # Clipboard monitoring client
-│   ├── rs-clip-bridge-server/   # WebSocket relay server
-│   └── rs-clip-bridge-types/     # Shared data types
+│   └── rs-clip-bridge-server/   # WebSocket relay server
 ```
 
 ## Installation

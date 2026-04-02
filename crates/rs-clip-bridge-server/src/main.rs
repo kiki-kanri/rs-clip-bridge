@@ -38,7 +38,6 @@ use wsio_server::{
 mod cli;
 mod config;
 mod namespaces;
-mod types;
 
 use self::{
     cli::{

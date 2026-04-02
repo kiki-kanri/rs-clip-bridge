@@ -16,7 +16,6 @@ use wsio_server::{
 use crate::{
     SERVER_CONFIG,
     WS_IO_SERVER,
-    types::ClipboardEventData,
 };
 
 // ================================================================================================
@@ -88,7 +87,7 @@ async fn on_ready(connection: Arc<WsIoServerConnection>) -> Result<()> {
 }
 
 /// Handle incoming clipboard event from a client
-async fn on_event(connection: Arc<WsIoServerConnection>, data: Arc<ClipboardEventData>) -> Result<()> {
+async fn on_event(connection: Arc<WsIoServerConnection>, data: Arc<Vec<u8>>) -> Result<()> {
     let channel_id = extract_channel_id_from_connection(&connection);
     let _ = connection.to([&channel_id]).emit("event", Some(data.as_ref())).await;
     Ok(())

@@ -18,22 +18,17 @@ RUN rustup component add clippy && \
 COPY ./.cargo ./.cargo
 COPY ./Cargo.lock ./Cargo.toml ./
 COPY ./crates/rs-clip-bridge-server/Cargo.toml ./crates/rs-clip-bridge-server/
-COPY ./crates/rs-clip-bridge-types/Cargo.toml ./crates/rs-clip-bridge-types/
 
 ## Prebuild dummy project to populate Cargo dependency cache
 RUN mkdir -p ./crates/rs-clip-bridge-server/src && \
     echo 'fn main() {}' >./crates/rs-clip-bridge-server/src/main.rs && \
-    mkdir -p ./crates/rs-clip-bridge-types/src && \
-    touch ./crates/rs-clip-bridge-types/src/lib.rs && \
     cargo b -r -p rs-clip-bridge-server && \
-    rm -rf ./crates/rs-clip-bridge-server/src ./crates/rs-clip-bridge-types/src
+    rm -rf ./crates/rs-clip-bridge-server/src
 
 ## Copy actual source code and build with lint + format checks
 COPY ./rustfmt.toml ./
 COPY ./crates/rs-clip-bridge-server ./crates/rs-clip-bridge-server
-COPY ./crates/rs-clip-bridge-types ./crates/rs-clip-bridge-types
 RUN touch ./crates/rs-clip-bridge-server/src/main.rs && \
-    touch ./crates/rs-clip-bridge-types/src/lib.rs && \
     cargo +nightly fmt --all -- --check && \
     cargo clippy -r --all-features --all-targets -- -D warnings && \
     cargo b -r -p rs-clip-bridge-server --all-features
