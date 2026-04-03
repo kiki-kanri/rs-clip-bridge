@@ -77,6 +77,8 @@ fn init_tracing() -> Result<()> {
     )
 }
 
+const VERSION: &str = concat!(env!("CARGO_PKG_VERSION"));
+
 fn load_config() -> Result<ServerConfig> {
     let cli = Cli::parse();
 
@@ -172,6 +174,7 @@ fn shutdown() {
 async fn main() -> Result<()> {
     // --- Init ---
     init_tracing()?;
+    tracing::info!(version = VERSION, "Starting rs-clip-bridge-server");
 
     // --- Setup ---
     load_config()?;

@@ -257,12 +257,14 @@ fn shutdown() {
 // Entry Point
 // ================================================================================================
 
+const VERSION: &str = concat!(env!("CARGO_PKG_VERSION"));
+
 #[tokio::main]
 async fn main() -> Result<()> {
     // --- Init ---
     init_tracing()?;
     init_rustls_crypto_provider()?;
-    tracing::info!("Starting rs-clip-bridge-client");
+    tracing::info!(version = VERSION, "Starting rs-clip-bridge-client");
 
     // --- Setup ---
     let config = load_config()?;
