@@ -11,7 +11,11 @@ use anyhow::{
     Result,
     anyhow,
 };
-use axum::Router;
+use axum::{
+    Router,
+    http::StatusCode,
+    routing::get,
+};
 use clap::Parser;
 use confique::Config;
 use kikiutils::{
@@ -112,6 +116,10 @@ fn setup_server_layer() -> WsIoServerLayer {
     WS_IO_SERVER.layer()
 }
 
+async fn health_handler() -> StatusCode {
+    StatusCode::OK
+}
+
 // ================================================================================================
 // Runtime
 // ================================================================================================
@@ -123,7 +131,10 @@ async fn run_server(cancel: CancellationToken) -> Result<()> {
 
     tracing::info!("Starting server on {addr}");
 
-    let app = Router::new().layer(setup_server_layer());
+    let app = Router::new()
+        .route("/health", get(health_handler))
+        .layer(setup_server_layer());
+
     let listener = TcpListener::bind(&addr).await.context("Failed to bind TCP listener")?;
 
     tracing::info!(

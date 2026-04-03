@@ -15,6 +15,7 @@ WebSocket server for rs-clip-bridge clipboard synchronization. Relays encrypted 
 - **WebSocket Transport** — Built on wsio-server for reliable, connection-oriented communication
 - **Channel-based Routing** — Clients join channels and only receive events from their channel
 - **Authentication** — Supports configurable auth keys to control access
+- **Health Check Endpoint** — `/health` returns `200 OK` for load balancer probes
 - **Tower Integration** — Runs as an Axum middleware layer for easy integration
 - **Graceful Shutdown** — Handles SIGINT/SIGTERM for clean shutdown
 - **Postcard Codec** — Efficient binary serialization using the Postcard format
@@ -149,6 +150,16 @@ struct ClipboardEventData {
 ### Namespace
 
 The server exposes a single namespace at `/` for all clipboard events.
+
+### Health Check
+
+For load balancer or orchestration health checks:
+
+```bash
+curl -f http://127.0.0.1:8000/health
+```
+
+Returns `200 OK` with no body when the server is running.
 
 ## License
 
