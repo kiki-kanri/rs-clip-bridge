@@ -12,15 +12,34 @@ git-fetch-with-cli = true
 
 [profile.dev]
 rustflags = [
-  "-C", "link-arg=-fuse-ld=mold",
+  # "-C", "link-arg=-fuse-ld=mold",
   # "--cfg", "reqwest_unstable",
 ]
 
 [profile.release]
 rustflags = [
-  "-C", "link-arg=-fuse-ld=mold",
+  # "-C", "link-arg=-fuse-ld=mold",
+  # "-C", "link-arg=-Wl,--icf=all",
+  # "-C", "relro-level=full",
+  # "-C", "target-cpu=native",
+  # "--cfg", "reqwest_unstable",
+]
+
+[target.'cfg(target_os = "linux")']
+rustflags = [
+  # "-C", "link-arg=-fuse-ld=mold",
   "-C", "link-arg=-Wl,--icf=all",
   "-C", "relro-level=full",
   # "-C", "target-cpu=native",
   # "--cfg", "reqwest_unstable",
+]
+
+[target.'cfg(target_os = "macos")']
+rustflags = [
+  "-C", "link-arg=-Wl,-icf_all",
+]
+
+[target.'cfg(target_env = "msvc")']
+rustflags = [
+  "-C", "target-feature=+crt-static",
 ]
