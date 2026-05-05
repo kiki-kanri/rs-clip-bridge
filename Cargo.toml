@@ -11,7 +11,14 @@ categories = []
 description = "A blazingly fast, cross-platform clipboard synchronizer using WebSockets with end-to-end ChaCha20-Poly1305 encryption. Sync clipboard content across multiple devices in real-time."
 edition = "2024"
 homepage = "https://github.com/kiki-kanri/rs-clip-bridge"
-keywords = []
+keywords = [
+  "clipboard bridge",
+  "clipboard sharing",
+  "clipboard sync",
+  "multi-device sync",
+  "real-time clipboard",
+]
+
 license = "MIT"
 repository = "https://github.com/kiki-kanri/rs-clip-bridge"
 
