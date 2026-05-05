@@ -44,7 +44,6 @@ jobs:
       - name: Set up Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: stable
           target: ${{ matrix.target }}
           cache: true
 
@@ -67,16 +66,13 @@ jobs:
           key: cargo-zigbuild-${{ runner.os }}
 
       - name: Install cargo-zigbuild
-        if: matrix.target == 'aarch64-unknown-linux-gnu' && steps.cache-zigbuild.outputs.cache-hit != 'true'
+        if: matrix.target == 'aarch64-unknown-linux-gnu' &&
+          steps.cache-zigbuild.outputs.cache-hit != 'true'
         run: cargo install cargo-zigbuild
 
       - name: Build
         shell: bash
         run: |
-          if [[ "${{ matrix.target }}" == *"-pc-windows-msvc" ]]; then
-            export RUSTFLAGS="-C target-feature=+crt-static"
-          fi
-
           if [ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]; then
             cargo zigbuild -r --target ${{ matrix.target }} --workspace
           else
