@@ -2,7 +2,6 @@
 FROM rust:slim-trixie AS build-stage
 
 ## Set args, envs and workdir
-ENV RUSTFLAGS='-C link-arg=-fuse-ld=mold -C relro-level=full'
 WORKDIR /app
 
 ## Upgrade and install packages
@@ -10,9 +9,9 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends gcc libssl-dev make mold pkg-config
 
-## Add rustup components
-RUN rustup component add clippy && \
-    rustup component add --toolchain nightly rustfmt
+## Pre-install toolchain using rust-toolchain.toml
+COPY ./rust-toolchain.toml ./
+RUN rustup show
 
 ## Copy Cargo config and manifest for dependency caching
 COPY ./.cargo ./.cargo
@@ -22,14 +21,14 @@ COPY ./crates/rs-clip-bridge-server/Cargo.toml ./crates/rs-clip-bridge-server/
 ## Prebuild dummy project to populate Cargo dependency cache
 RUN mkdir -p ./crates/rs-clip-bridge-server/src && \
     echo 'fn main() {}' >./crates/rs-clip-bridge-server/src/main.rs && \
-    cargo b -r -p rs-clip-bridge-server && \
+    cargo b -r -p rs-clip-bridge-server --all-features --all-targets && \
     rm -rf ./crates/rs-clip-bridge-server/src
 
 ## Copy actual source code and build with lint + format checks
 COPY ./rustfmt.toml ./
 COPY ./crates/rs-clip-bridge-server ./crates/rs-clip-bridge-server
 RUN touch ./crates/rs-clip-bridge-server/src/main.rs && \
-    cargo +nightly fmt --all -- --check && \
+    cargo format && \
     cargo clippy -r --all-features --all-targets -- -D warnings && \
     cargo b -r -p rs-clip-bridge-server --all-features
 
