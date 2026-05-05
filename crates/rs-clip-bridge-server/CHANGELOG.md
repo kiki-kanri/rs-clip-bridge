@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.6 - 2026-05-05 05:39
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.1.5...rs-clip-bridge-server-v0.1.6)
+
+### 🏡 Chore
+
+- *(server)* fmt code ([192dd3d](https://github.com/ws-io/ws.io-rs/commit/192dd3d))
+- upgrade deps ([b0e814a](https://github.com/ws-io/ws.io-rs/commit/b0e814a))
+- upgrade deps ([1ab4684](https://github.com/ws-io/ws.io-rs/commit/1ab4684))
+- log version when startup ([826c966](https://github.com/ws-io/ws.io-rs/commit/826c966))
+
+### 📦 Build
+
+- *(server)* update Dockerfile ([bff2481](https://github.com/ws-io/ws.io-rs/commit/bff2481))
+
+### 🚀 Enhancements
+
+- *(server)* add health check api endpoint ([337dd0a](https://github.com/ws-io/ws.io-rs/commit/337dd0a))
+
 ## 0.1.5 - 2026-04-02 19:04
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.1.4...rs-clip-bridge-server-v0.1.5)
