@@ -1,4 +1,4 @@
-name: CI Test & Coverage
+name: Multi-Platform Verification & Code Coverage
 
 on:
   push:
