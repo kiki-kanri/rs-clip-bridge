@@ -18,7 +18,10 @@ repository = "https://github.com/kiki-kanri/rs-clip-bridge"
 # Profiles
 [profile.release]
 codegen-units = 1
+debug = false
+incremental = false
 lto = "fat"
+opt-level = 3
 overflow-checks = true
-panic = "unwind"
+panic = "abort"
 strip = "symbols"
