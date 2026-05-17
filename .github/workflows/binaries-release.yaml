@@ -91,9 +91,23 @@ jobs:
           ext=""
           [[ "${target}" == *"windows"* ]] && ext=".exe"
 
+          artifact_dir="target/${target}/release"
+          if [[ ! -f "${artifact_dir}/rs-clip-bridge-client${ext}" ]]; then
+            artifact_dir="target/release"
+          fi
+
+          client="${artifact_dir}/rs-clip-bridge-client${ext}"
+          server="${artifact_dir}/rs-clip-bridge-server${ext}"
+
+          if [[ ! -f "${client}" || ! -f "${server}" ]]; then
+            echo "missing expected binaries for ${target}" >&2
+            find target -maxdepth 4 -type f \( -name 'rs-clip-bridge-client*' -o -name 'rs-clip-bridge-server*' \) -print >&2
+            exit 1
+          fi
+
           mkdir -p ./output
-          cp "target/${target}/release/rs-clip-bridge-client${ext}" "./output/rs-clip-bridge-client-${target}${ext}"
-          cp "target/${target}/release/rs-clip-bridge-server${ext}" "./output/rs-clip-bridge-server-${target}${ext}"
+          cp "${client}" "./output/rs-clip-bridge-client-${target}${ext}"
+          cp "${server}" "./output/rs-clip-bridge-server-${target}${ext}"
 
       - name: Upload Binaries (Artifacts)
         uses: actions/upload-artifact@v7
