@@ -73,11 +73,16 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          if [ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]; then
-            cargo zigbuild -r --target ${{ matrix.target }} --workspace
-          else
-            cargo b -r --target ${{ matrix.target }} --workspace
-          fi
+          target="${{ matrix.target }}"
+
+          case "${target}" in
+            *windows*)
+              cmd.exe /c call "scripts\\build\\release\\${target}.cmd" --workspace
+              ;;
+            *)
+              "./scripts/build/release/${target}.sh" --workspace
+              ;;
+          esac
 
       - name: Prepare Artifacts
         shell: bash
