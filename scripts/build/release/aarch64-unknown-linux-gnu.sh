@@ -2,22 +2,15 @@
 
 set -euo pipefail
 
-if [[ -d "${HOME}/.cargo/bin" ]]; then
-    export PATH="${HOME}/.cargo/bin:${PATH}"
-fi
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+. "${SCRIPT_DIR}/../../lib/common.sh"
 
-if ! command -v zig >/dev/null 2>&1; then
-    echo "missing zig; install Zig with your package manager or setup-zig in CI" >&2
-    exit 1
-fi
+prepend_cargo_bin_to_path
+ensure_cargo_target aarch64-unknown-linux-gnu
 
-if ! command -v cargo-zigbuild >/dev/null 2>&1; then
-    echo "missing cargo-zigbuild; install it with: cargo install cargo-zigbuild" >&2
-    exit 1
-fi
+require_cargo_zigbuild
 
-sep=$'\x1f'
-flags=(
+rustflags=(
     # Optional CPU tuning for deployment fleets with a known ARMv8-A baseline.
     # Keep disabled for generic release binaries because it can emit instructions
     # that are unavailable on older or lower-end aarch64 Linux machines.
@@ -36,18 +29,4 @@ flags=(
     # -C link-arg=-Wl,--icf=all
 )
 
-if ((${#flags[@]} == 0)); then
-    exec cargo zigbuild -r --target aarch64-unknown-linux-gnu "$@"
-fi
-
-encoded=""
-for flag in "${flags[@]}"; do
-    if [[ -n "${encoded}" ]]; then
-        encoded+="$sep"
-    fi
-
-    encoded+="$flag"
-done
-
-exec env CARGO_ENCODED_RUSTFLAGS="${encoded}" \
-    cargo zigbuild -r --target aarch64-unknown-linux-gnu "$@"
+exec_with_encoded_rustflags cargo zigbuild -r --target aarch64-unknown-linux-gnu "$@"

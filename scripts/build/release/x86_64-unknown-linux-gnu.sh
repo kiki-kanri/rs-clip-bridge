@@ -2,8 +2,13 @@
 
 set -euo pipefail
 
-sep=$'\x1f'
-flags=(
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+. "${SCRIPT_DIR}/../../lib/common.sh"
+
+prepend_cargo_bin_to_path
+ensure_cargo_target x86_64-unknown-linux-gnu
+
+rustflags=(
     -C link-arg=-fuse-ld=mold
 
     # Optional CPU baseline tuning for deployment fleets with known x86-64
@@ -24,14 +29,4 @@ flags=(
     # -C link-arg=-Wl,--icf=all
 )
 
-encoded=""
-for flag in "${flags[@]}"; do
-    if [[ -n "${encoded}" ]]; then
-        encoded+="$sep"
-    fi
-
-    encoded+="$flag"
-done
-
-exec env CARGO_ENCODED_RUSTFLAGS="${encoded}" \
-    cargo b -r --target x86_64-unknown-linux-gnu "$@"
+exec_with_encoded_rustflags cargo b -r --target x86_64-unknown-linux-gnu "$@"

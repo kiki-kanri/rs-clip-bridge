@@ -2,8 +2,13 @@
 
 set -euo pipefail
 
-sep=$'\x1f'
-flags=(
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+. "${SCRIPT_DIR}/../../lib/common.sh"
+
+prepend_cargo_bin_to_path
+ensure_cargo_target x86_64-apple-darwin
+
+rustflags=(
     # Optional CPU baseline tuning for deployment fleets with known x86-64
     # support. Keep disabled for generic release binaries; x86-64-v3, for
     # example, requires AVX/AVX2-class machines and excludes older Intel Macs.
@@ -17,18 +22,4 @@ flags=(
     # -C target-feature=+sse4.2
 )
 
-if ((${#flags[@]} == 0)); then
-    exec cargo b -r --target x86_64-apple-darwin "$@"
-fi
-
-encoded=""
-for flag in "${flags[@]}"; do
-    if [[ -n "${encoded}" ]]; then
-        encoded+="$sep"
-    fi
-
-    encoded+="$flag"
-done
-
-exec env CARGO_ENCODED_RUSTFLAGS="${encoded}" \
-    cargo b -r --target x86_64-apple-darwin "$@"
+exec_with_encoded_rustflags cargo b -r --target x86_64-apple-darwin "$@"

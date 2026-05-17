@@ -2,8 +2,13 @@
 
 set -euo pipefail
 
-sep=$'\x1f'
-flags=(
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+. "${SCRIPT_DIR}/../../lib/common.sh"
+
+prepend_cargo_bin_to_path
+ensure_cargo_target aarch64-apple-darwin
+
+rustflags=(
     # Optional CPU tuning for deployment fleets with a known Apple Silicon
     # baseline. Keep disabled for generic release binaries because it can emit
     # instructions that are unavailable on older Apple Silicon machines.
@@ -17,18 +22,4 @@ flags=(
     # -C target-feature=+lse
 )
 
-if ((${#flags[@]} == 0)); then
-    exec cargo b -r --target aarch64-apple-darwin "$@"
-fi
-
-encoded=""
-for flag in "${flags[@]}"; do
-    if [[ -n "${encoded}" ]]; then
-        encoded+="$sep"
-    fi
-
-    encoded+="$flag"
-done
-
-exec env CARGO_ENCODED_RUSTFLAGS="${encoded}" \
-    cargo b -r --target aarch64-apple-darwin "$@"
+exec_with_encoded_rustflags cargo b -r --target aarch64-apple-darwin "$@"
