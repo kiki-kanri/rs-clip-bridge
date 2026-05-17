@@ -2,7 +2,7 @@
 $ErrorActionPreference = "Stop"
 
 $SCRIPT_DIR = Split-Path -Parent $PSCommandPath
-. (Join-Path $SCRIPT_DIR '..\..\..\lib\common.ps1')
+. (Join-Path $SCRIPT_DIR '..\..\..\libs\common.ps1')
 
 Ensure-CargoTarget 'aarch64-pc-windows-msvc'
 
