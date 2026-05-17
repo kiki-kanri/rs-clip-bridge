@@ -6,22 +6,22 @@ $flags = @(
     "-C"
     "control-flow-guard=yes"
 
-    # Optional CPU baseline tuning for deployment fleets with known x86-64
-    # support. Keep disabled for generic release binaries; x86-64-v3, for
-    # example, requires AVX/AVX2-class machines and excludes older CPUs.
+    # Optional CPU tuning for deployment fleets with a known ARMv8-A baseline.
+    # Keep disabled for generic release binaries because it can emit instructions
+    # that are unavailable on older or lower-end Windows ARM64 machines.
     # "-C"
-    # "target-cpu=x86-64-v2"
+    # "target-cpu=cortex-a72"
     # "-C"
-    # "target-cpu=x86-64-v3"
+    # "target-cpu=neoverse-n1"
 
-    # Optional CPU extensions. Keep disabled for generic release binaries; use
+    # Optional ARMv8 extensions. Keep disabled for generic release binaries; use
     # only when all target machines are known to support the selected feature.
     # "-C"
-    # "target-feature=+aes"
+    # "target-feature=+crc"
     # "-C"
-    # "target-feature=+avx2"
+    # "target-feature=+crypto"
     # "-C"
-    # "target-feature=+sse4.2"
+    # "target-feature=+lse"
 
     # Optional static CRT for single-file deployment. Keep disabled by default
     # because some dependency stacks expect the dynamic MSVC runtime.
@@ -34,7 +34,7 @@ $code = 0
 
 try {
     [Environment]::SetEnvironmentVariable("CARGO_ENCODED_RUSTFLAGS", [string]::Join($sep, $flags), "Process")
-    & cargo b -r --target x86_64-pc-windows-msvc @args
+    & cargo b -r --target aarch64-pc-windows-msvc @args
     $code = $LASTEXITCODE
 } finally {
     [Environment]::SetEnvironmentVariable("CARGO_ENCODED_RUSTFLAGS", $old, "Process")
