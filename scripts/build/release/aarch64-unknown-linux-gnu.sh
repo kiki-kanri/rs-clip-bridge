@@ -2,12 +2,16 @@
 
 set -euo pipefail
 
+if [[ -d "${HOME}/.cargo/bin" ]]; then
+    export PATH="${HOME}/.cargo/bin:${PATH}"
+fi
+
 if ! command -v zig >/dev/null 2>&1; then
     echo "missing zig; install Zig with your package manager or setup-zig in CI" >&2
     exit 1
 fi
 
-if ! cargo zigbuild --version >/dev/null 2>&1; then
+if ! command -v cargo-zigbuild >/dev/null 2>&1; then
     echo "missing cargo-zigbuild; install it with: cargo install cargo-zigbuild" >&2
     exit 1
 fi
