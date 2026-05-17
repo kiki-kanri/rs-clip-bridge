@@ -26,11 +26,11 @@ jobs:
             target: x86_64-unknown-linux-gnu
           - os: ubuntu-latest
             target: x86_64-unknown-linux-musl
-          - os: windows-latest
+          - os: windows-2025-vs2026
             target: x86_64-pc-windows-msvc
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-          - os: windows-latest
+          - os: windows-2025-vs2026
             target: aarch64-pc-windows-msvc
           - os: macos-latest
             target: x86_64-apple-darwin
@@ -157,12 +157,12 @@ jobs:
           done
 
       - name: Update GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: latest
           name: "Latest Release Build"
           files: ./all-binaries/*
-          overwrite: true
+          overwrite_files: true
           prerelease: true
           body: |
             ## Automated Build Artifacts (Latest)
