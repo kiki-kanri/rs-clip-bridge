@@ -87,12 +87,13 @@ jobs:
       - name: Prepare Artifacts
         shell: bash
         run: |
-          mkdir -p ./output
-          EXT=""
-          [[ "${{ matrix.target }}" == *"windows"* ]] && EXT=".exe"
+          target="${{ matrix.target }}"
+          ext=""
+          [[ "${target}" == *"windows"* ]] && ext=".exe"
 
-          cp target/${{ matrix.target }}/release/rs-clip-bridge-client$EXT ./output/rs-clip-bridge-client-${{ matrix.target }}$EXT || true
-          cp target/${{ matrix.target }}/release/rs-clip-bridge-server$EXT ./output/rs-clip-bridge-server-${{ matrix.target }}$EXT || true
+          mkdir -p ./output
+          cp "target/${target}/release/rs-clip-bridge-client${ext}" "./output/rs-clip-bridge-client-${target}${ext}"
+          cp "target/${target}/release/rs-clip-bridge-server${ext}" "./output/rs-clip-bridge-server-${target}${ext}"
 
       - name: Upload Binaries (Artifacts)
         uses: actions/upload-artifact@v7
@@ -129,6 +130,31 @@ jobs:
         with:
           path: ./all-binaries
           merge-multiple: true
+
+      - name: Verify downloaded binaries
+        shell: bash
+        run: |
+          actual_count="$(find ./all-binaries -type f | wc -l)"
+          expected_count=14
+
+          if [[ "${actual_count}" -ne "${expected_count}" ]]; then
+            echo "expected ${expected_count} binaries, found ${actual_count}" >&2
+            find ./all-binaries -type f -print >&2
+            exit 1
+          fi
+
+      - name: Clear existing release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if ! gh api "repos/${{ github.repository }}/releases/tags/latest" >/tmp/latest-release.json 2>/dev/null; then
+            exit 0
+          fi
+
+          jq -r '.assets[].id' /tmp/latest-release.json | while read -r asset_id; do
+            gh api --method DELETE "repos/${{ github.repository }}/releases/assets/${asset_id}"
+          done
 
       - name: Update GitHub Release
         uses: softprops/action-gh-release@v2
