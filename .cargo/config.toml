@@ -37,7 +37,9 @@ rustflags = [
 # Targets
 
 # Dev-safe target-wide examples only. Release-only target flags belong in scripts.
-[target.x86_64-unknown-linux-gnu]
-rustflags = [
-  "-C", "link-arg=-fuse-ld=mold",
-]
+# [target.x86_64-unknown-linux-gnu]
+# rustflags = [
+#   # Prefer keeping release-only linker choices in scripts/build/release/*.sh.
+#   # Enabling this target-wide requires mold on every dev/CI machine.
+#   "-C", "link-arg=-fuse-ld=mold",
+# ]

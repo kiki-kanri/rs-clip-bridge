@@ -4,7 +4,9 @@ set -euo pipefail
 
 sep=$'\x1f'
 flags=(
-    -C link-arg=-fuse-ld=mold
+    # Optional faster ELF linker. Keep disabled by default because GitHub runners
+    # and many developer machines do not have mold installed.
+    # -C link-arg=-fuse-ld=mold
 
     # Optional CPU baseline tuning for deployment fleets with known x86-64
     # support. Keep disabled for generic release binaries; x86-64-v3, for
@@ -23,6 +25,10 @@ flags=(
     # identical machine code and therefore change function pointer identity.
     # -C link-arg=-Wl,--icf=all
 )
+
+if ((${#flags[@]} == 0)); then
+    exec cargo b -r --target x86_64-unknown-linux-gnu "$@"
+fi
 
 encoded=""
 for flag in "${flags[@]}"; do
