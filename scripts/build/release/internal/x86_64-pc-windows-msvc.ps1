@@ -1,8 +1,12 @@
 #!/usr/bin/env pwsh
 $ErrorActionPreference = "Stop"
 
-$sep = [string][char]0x1f
-$flags = @(
+$SCRIPT_DIR = Split-Path -Parent $PSCommandPath
+. (Join-Path $SCRIPT_DIR '..\..\..\libs\common.ps1')
+
+Ensure-CargoTarget 'x86_64-pc-windows-msvc'
+
+$rustFlags = @(
     "-C"
     "control-flow-guard=yes"
 
@@ -29,15 +33,5 @@ $flags = @(
     # "target-feature=+crt-static"
 )
 
-$old = [Environment]::GetEnvironmentVariable("CARGO_ENCODED_RUSTFLAGS", "Process")
-$code = 0
-
-try {
-    [Environment]::SetEnvironmentVariable("CARGO_ENCODED_RUSTFLAGS", [string]::Join($sep, $flags), "Process")
-    & cargo b -r --target x86_64-pc-windows-msvc @args
-    $code = $LASTEXITCODE
-} finally {
-    [Environment]::SetEnvironmentVariable("CARGO_ENCODED_RUSTFLAGS", $old, "Process")
-}
-
-exit $code
+$cargoArgs = @('b', '-r', '--target', 'x86_64-pc-windows-msvc') + $args
+exit (Invoke-WithEncodedRustflags $rustFlags 'cargo' $cargoArgs)

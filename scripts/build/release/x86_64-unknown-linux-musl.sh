@@ -2,17 +2,24 @@
 
 set -euo pipefail
 
-if ! command -v x86_64-linux-musl-gcc >/dev/null 2>&1; then
-    if command -v musl-gcc >/dev/null 2>&1; then
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+# shellcheck source=scripts/libs/common.sh
+. "${SCRIPT_DIR}/../../libs/common.sh"
+
+prepend_cargo_bin_to_path
+ensure_cargo_target x86_64-unknown-linux-musl
+
+if ! command_exists x86_64-linux-musl-gcc; then
+    if command_exists musl-gcc; then
         export CC_x86_64_unknown_linux_musl="${CC_x86_64_unknown_linux_musl:-musl-gcc}"
     else
-        echo "missing x86_64-linux-musl-gcc/musl-gcc; install musl-tools with your package manager" >&2
+        log_error "missing x86_64-linux-musl-gcc/musl-gcc; install musl-tools with your package manager"
         exit 1
     fi
 fi
 
-sep=$'\x1f'
-flags=(
+# shellcheck disable=SC2034 # Used indirectly by exec_with_encoded_rustflags.
+rustflags=(
     # Optional CPU baseline tuning for deployment fleets with known x86-64
     # support. Keep disabled for generic release binaries; x86-64-v3, for
     # example, requires AVX/AVX2-class machines and excludes older CPUs.
@@ -36,18 +43,4 @@ flags=(
     # -C link-arg=-Wl,--icf=all
 )
 
-if ((${#flags[@]} == 0)); then
-    exec cargo b -r --target x86_64-unknown-linux-musl "$@"
-fi
-
-encoded=""
-for flag in "${flags[@]}"; do
-    if [[ -n "${encoded}" ]]; then
-        encoded+="$sep"
-    fi
-
-    encoded+="$flag"
-done
-
-exec env CARGO_ENCODED_RUSTFLAGS="${encoded}" \
-    cargo b -r --target x86_64-unknown-linux-musl "$@"
+exec_with_encoded_rustflags rustflags cargo b -r --target x86_64-unknown-linux-musl "$@"

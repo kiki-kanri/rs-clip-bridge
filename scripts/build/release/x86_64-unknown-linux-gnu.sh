@@ -2,10 +2,15 @@
 
 set -euo pipefail
 
-sep=$'\x1f'
-flags=(
-    # Optional faster ELF linker. Keep disabled by default because GitHub runners
-    # and many developer machines do not have mold installed.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+# shellcheck source=scripts/libs/common.sh
+. "${SCRIPT_DIR}/../../libs/common.sh"
+
+prepend_cargo_bin_to_path
+ensure_cargo_target x86_64-unknown-linux-gnu
+
+# shellcheck disable=SC2034 # Used indirectly by exec_with_encoded_rustflags.
+rustflags=(
     # -C link-arg=-fuse-ld=mold
 
     # Optional CPU baseline tuning for deployment fleets with known x86-64
@@ -26,18 +31,4 @@ flags=(
     # -C link-arg=-Wl,--icf=all
 )
 
-if ((${#flags[@]} == 0)); then
-    exec cargo b -r --target x86_64-unknown-linux-gnu "$@"
-fi
-
-encoded=""
-for flag in "${flags[@]}"; do
-    if [[ -n "${encoded}" ]]; then
-        encoded+="$sep"
-    fi
-
-    encoded+="$flag"
-done
-
-exec env CARGO_ENCODED_RUSTFLAGS="${encoded}" \
-    cargo b -r --target x86_64-unknown-linux-gnu "$@"
+exec_with_encoded_rustflags rustflags cargo b -r --target x86_64-unknown-linux-gnu "$@"
