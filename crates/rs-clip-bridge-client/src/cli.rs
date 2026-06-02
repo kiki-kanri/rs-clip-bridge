@@ -3,6 +3,10 @@ use std::{
     path::PathBuf,
 };
 
+use anyhow::{
+    Context,
+    Result,
+};
 use clap::{
     Parser,
     Subcommand,
@@ -66,12 +70,16 @@ pub enum Commands {
     },
 }
 
-pub fn run_generate_config_template(output: Option<PathBuf>) {
+pub fn run_generate_config_template(output: Option<PathBuf>) -> Result<()> {
     let content = template::<ClientConfig>(Default::default());
     match output {
-        Some(path) => write(&path, &content).unwrap(),
+        Some(path) => {
+            write(&path, &content).with_context(|| format!("Failed to write config template to {}", path.display()))?
+        }
         None => print!("{}", content),
     }
+
+    Ok(())
 }
 
 #[cfg(test)]

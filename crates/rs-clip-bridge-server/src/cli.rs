@@ -3,6 +3,10 @@ use std::{
     path::PathBuf,
 };
 
+use anyhow::{
+    Context,
+    Result,
+};
 use clap::{
     Parser,
     Subcommand,
@@ -17,7 +21,7 @@ use crate::config::ServerConfig;
     version,
     about = "rs-clip-bridge: A blazingly fast, cross-platform clipboard synchronizer using WebSockets.",
     long_about = "A secure tool to synchronize clipboard content across multiple devices. \
-                  Supports both text and binary data, with server-side grouping via auth keys."
+                  Supports text and image clipboard sync, with server-side grouping via auth keys."
 )]
 pub struct Cli {
     /// Authentication keys for server access (multiple allowed).
@@ -53,12 +57,16 @@ pub enum Commands {
     },
 }
 
-pub fn run_generate_config_template(output: Option<PathBuf>) {
+pub fn run_generate_config_template(output: Option<PathBuf>) -> Result<()> {
     let content = template::<ServerConfig>(Default::default());
     match output {
-        Some(path) => write(&path, &content).unwrap(),
+        Some(path) => {
+            write(&path, &content).with_context(|| format!("Failed to write config template to {}", path.display()))?
+        }
         None => print!("{}", content),
     }
+
+    Ok(())
 }
 
 #[cfg(test)]

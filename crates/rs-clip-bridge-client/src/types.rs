@@ -15,6 +15,16 @@ pub enum ClipboardContent {
     Raw(Vec<u8>),
 }
 
+/// Encryption payload envelope for serialized clipboard content.
+///
+/// This is serialized with Postcard before encryption. It intentionally replaces
+/// the previous magic-byte framing, so old clients are not wire-compatible.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub enum ClipboardPayloadEnvelope {
+    Uncompressed(Vec<u8>),
+    Zstd(Vec<u8>),
+}
+
 /// Event data sent when clipboard content changes.
 ///
 /// Content is encrypted using ChaCha20-Poly1305.
@@ -23,7 +33,7 @@ pub struct ClipboardEventData {
     /// Optional device name that originated this event
     pub device_name: Option<String>,
 
-    /// Encrypted content: `[ciphertext || poly1305_tag]`
+    /// Encrypted `ClipboardPayloadEnvelope`: `[ciphertext || poly1305_tag]`
     pub content: Vec<u8>,
 
     /// ChaCha20-Poly1305 nonce (12 bytes)
@@ -84,6 +94,19 @@ mod tests {
         let encoded = to_allocvec(&image).unwrap();
         let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
         assert_eq!(decoded, image);
+    }
+
+    #[test]
+    fn clipboard_payload_envelope_serde() {
+        let uncompressed = ClipboardPayloadEnvelope::Uncompressed(vec![0x01, 0x02, 0x03]);
+        let encoded = to_allocvec(&uncompressed).unwrap();
+        let decoded: ClipboardPayloadEnvelope = from_bytes(&encoded).unwrap();
+        assert_eq!(decoded, uncompressed);
+
+        let zstd = ClipboardPayloadEnvelope::Zstd(vec![0x28, 0xb5, 0x2f, 0xfd]);
+        let encoded = to_allocvec(&zstd).unwrap();
+        let decoded: ClipboardPayloadEnvelope = from_bytes(&encoded).unwrap();
+        assert_eq!(decoded, zstd);
     }
 
     #[test]

@@ -86,7 +86,7 @@ fn load_config() -> Result<ServerConfig> {
     if let Some(cmd) = cli.command {
         match cmd {
             Commands::GenerateConfigTemplate { output } => {
-                run_generate_config_template(output);
+                run_generate_config_template(output)?;
                 exit(0);
             }
         }

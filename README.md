@@ -12,7 +12,7 @@ A blazingly fast, cross-platform clipboard synchronizer using WebSockets with en
 - **End-to-End Encryption** — All clipboard data is encrypted using ChaCha20-Poly1305 before transmission
 - **Channel Isolation** — Devices are organized into channels, ensuring clipboard data only syncs within designated groups
 - **Cross-Platform** — Works on Linux (X11), macOS, and Windows
-- **Multiple Data Types** — Supports text, images, and binary clipboard content
+- **Multiple Data Types** — Supports text and image clipboard content; raw/binary clipboard support is reserved for future implementation
 - **WebSocket Transport** — Reliable, connection-oriented communication with automatic reconnection
 
 ## Architecture
@@ -132,7 +132,7 @@ Both client and server support configuration via TOML files and environment vari
 
 | Variable | Description |
 |----------|-------------|
-| `RS_CLIP_AUTH_KEY` | Authentication key for server access |
+| `RS_CLIP_AUTH_KEY` | Authentication key for server access; optional when server has no auth keys configured |
 | `RS_CLIP_CHANNEL_ID` | Channel ID for clipboard isolation |
 | `RS_CLIP_ENCRYPT_KEY` | Encryption key (64 hex chars / 32 bytes) |
 | `RS_CLIP_SERVER_URL` | WebSocket server URL |
@@ -144,7 +144,7 @@ Both client and server support configuration via TOML files and environment vari
 
 | Variable | Description |
 |----------|-------------|
-| `RS_CLIP_AUTH_KEYS` | Comma-separated list of auth keys |
+| `RS_CLIP_AUTH_KEYS` | Comma-separated list of auth keys; when unset/empty, server allows clients without auth |
 | `RS_CLIP_SERVER_HOST` | Server bind address |
 | `RS_CLIP_SERVER_PORT` | Server port |
 

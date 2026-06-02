@@ -73,6 +73,7 @@ use self::{
     types::{
         ClipboardContent,
         ClipboardEventData,
+        ClipboardPayloadEnvelope,
     },
 };
 
@@ -121,7 +122,7 @@ fn load_config() -> Result<ClientConfig> {
     if let Some(cmd) = cli.command {
         match cmd {
             Commands::GenerateConfigTemplate { output } => {
-                run_generate_config_template(output);
+                run_generate_config_template(output)?;
                 exit(0);
             }
         }
@@ -187,6 +188,13 @@ fn setup_display(display: &Option<String>) {
 // Event Handlers
 // ================================================================================================
 
+fn decode_clipboard_payload(plaintext: &[u8]) -> Result<Vec<u8>> {
+    match from_bytes::<ClipboardPayloadEnvelope>(plaintext).context("Deserialize payload envelope failed")? {
+        ClipboardPayloadEnvelope::Uncompressed(payload) => Ok(payload),
+        ClipboardPayloadEnvelope::Zstd(payload) => decompress(&payload).context("Decompression failed"),
+    }
+}
+
 async fn handle_server_event(_: Arc<WsIoClientSession>, data_bytes: Arc<Vec<u8>>) -> Result<()> {
     let key = CRYPTO_KEY.get().context("Crypto key not initialized")?;
     let data = from_bytes::<ClipboardEventData>(&data_bytes)?;
@@ -194,12 +202,8 @@ async fn handle_server_event(_: Arc<WsIoClientSession>, data_bytes: Arc<Vec<u8>>
     // Decrypt content
     let plaintext = decrypt(key, &data.nonce, &data.content).context("Decryption failed")?;
 
-    // Decompress if needed (magic byte: 0x01 = zstd, 0x00 = uncompressed)
-    let decompressed = if plaintext.first() == Some(&0x01) {
-        decompress(&plaintext[1..]).context("Decompression failed")?
-    } else {
-        plaintext[1..].to_vec()
-    };
+    // Decode and decompress the encrypted payload envelope.
+    let decompressed = decode_clipboard_payload(&plaintext)?;
 
     // Deserialize ClipboardContent
     let content = from_bytes(&decompressed).context("Deserialize clipboard content failed")?;
@@ -349,5 +353,39 @@ mod tests {
             .load()
             .unwrap();
         assert_eq!(config.min_compress_size_bytes, 1024);
+    }
+}
+
+#[cfg(test)]
+mod payload_tests {
+    use postcard::to_allocvec;
+
+    use super::*;
+    use crate::crypto::compress;
+
+    #[test]
+    fn decode_uncompressed_payload_envelope() {
+        let payload = vec![0x00, 0x01, 0x02];
+        let envelope = ClipboardPayloadEnvelope::Uncompressed(payload.clone());
+        let encoded = to_allocvec(&envelope).unwrap();
+
+        assert_eq!(decode_clipboard_payload(&encoded).unwrap(), payload);
+    }
+
+    #[test]
+    fn decode_zstd_payload_envelope() {
+        let payload = b"hello clipboard".to_vec();
+        let compressed = compress(&payload).unwrap();
+        let envelope = ClipboardPayloadEnvelope::Zstd(compressed);
+        let encoded = to_allocvec(&envelope).unwrap();
+
+        assert_eq!(decode_clipboard_payload(&encoded).unwrap(), payload);
+    }
+
+    #[test]
+    fn decode_invalid_payload_envelope_fails() {
+        let err = decode_clipboard_payload(&[0xff, 0x00, 0x01]).unwrap_err();
+
+        assert!(err.to_string().contains("Deserialize payload envelope failed"));
     }
 }

@@ -15,7 +15,7 @@ Cross-platform clipboard sync client for rs-clip-bridge. Monitors local clipboar
 - **Clipboard Monitoring** — Continuously monitors local clipboard for changes using platform-native APIs
 - **End-to-End Encryption** — Encrypts clipboard content with ChaCha20-Poly1305 before transmission
 - **Circular Write Prevention** — Detects and skips local clipboard writes to avoid feedback loops
-- **Multiple Content Types** — Supports text, images, and raw binary data
+- **Multiple Content Types** — Supports text and image clipboard content; raw/binary clipboard support is reserved for future implementation
 - **Signal Handling** — Graceful shutdown on SIGINT/SIGTERM
 - **Configuration** — Supports TOML config files and environment variables
 
@@ -118,7 +118,7 @@ rs-clip-bridge-client --config config.toml
 | `--server-url` | WebSocket server URL (e.g., `ws://localhost:8000`) |
 | `--channel-id` | Channel ID for clipboard isolation |
 | `--encrypt-key` | Encryption key (64 hex chars / 32 bytes) |
-| `--auth-key` | Authentication key for server access |
+| `--auth-key` | Authentication key for server access; optional when server authentication is disabled |
 | `--display` | X11 display name (Linux only, e.g., `:0`) |
 | `--max-image-size-bytes` | Maximum image size to sync (default: 10485760) |
 | `--min-compress-size-bytes` | Minimum size to trigger compression (default: 1024) |
@@ -132,7 +132,7 @@ rs-clip-bridge-client --config config.toml
 | `RS_CLIP_SERVER_URL` | WebSocket server URL |
 | `RS_CLIP_CHANNEL_ID` | Channel ID for clipboard isolation |
 | `RS_CLIP_ENCRYPT_KEY` | Encryption key (64 hex chars / 32 bytes) |
-| `RS_CLIP_AUTH_KEY` | Authentication key for server access |
+| `RS_CLIP_AUTH_KEY` | Authentication key for server access; optional when server authentication is disabled |
 | `RS_CLIP_DISPLAY` | X11 display name (Linux only) |
 | `RS_CLIP_MAX_IMAGE_SIZE_BYTES` | Maximum image size to sync |
 | `RS_CLIP_MIN_COMPRESS_SIZE_BYTES` | Minimum size to trigger compression |

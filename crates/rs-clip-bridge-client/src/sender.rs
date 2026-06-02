@@ -26,6 +26,7 @@ use crate::{
     types::{
         ClipboardContent,
         ClipboardEventData,
+        ClipboardPayloadEnvelope,
     },
 };
 
@@ -50,6 +51,19 @@ pub(crate) async fn run_clipboard_sender(mut rx: UnboundedReceiver<ClipboardCont
     }
 }
 
+fn build_payload_envelope(serialized: &[u8], min_compress_size_bytes: usize) -> Result<ClipboardPayloadEnvelope> {
+    if serialized.len() < min_compress_size_bytes {
+        return Ok(ClipboardPayloadEnvelope::Uncompressed(serialized.to_vec()));
+    }
+
+    let compressed = compress(serialized).map_err(|e| anyhow!("Compression failed: {e}"))?;
+    if compressed.len() < serialized.len() {
+        Ok(ClipboardPayloadEnvelope::Zstd(compressed))
+    } else {
+        Ok(ClipboardPayloadEnvelope::Uncompressed(serialized.to_vec()))
+    }
+}
+
 async fn send_clipboard(client: &WsIoClient, key: &chacha20poly1305::Key, content: ClipboardContent) -> Result<()> {
     // Serialize ClipboardContent to bytes
     let serialized = to_allocvec(&content).map_err(|e| anyhow!("Serialize failed: {e}"))?;
@@ -59,23 +73,15 @@ async fn send_clipboard(client: &WsIoClient, key: &chacha20poly1305::Key, conten
         return Ok(());
     }
 
-    // Compress if content exceeds minimum size threshold
+    // Compress only when content exceeds the threshold and compression actually saves bytes.
     let min_size = CLIENT_CONFIG
         .get()
         .expect("CLIENT_CONFIG must be initialized")
         .min_compress_size_bytes;
 
-    let to_encrypt = if serialized.len() >= min_size {
-        let compressed = compress(&serialized).map_err(|e| anyhow!("Compression failed: {e}"))?;
+    let envelope = build_payload_envelope(&serialized, min_size)?;
 
-        let mut data = vec![0x01u8]; // magic: zstd compressed
-        data.extend(compressed);
-        data
-    } else {
-        let mut data = vec![0x00u8]; // magic: uncompressed
-        data.extend(serialized.clone());
-        data
-    };
+    let to_encrypt = to_allocvec(&envelope).map_err(|e| anyhow!("Serialize payload envelope failed: {e}"))?;
 
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -102,4 +108,39 @@ async fn send_clipboard(client: &WsIoClient, key: &chacha20poly1305::Key, conten
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn payload_envelope_skips_compression_below_threshold() {
+        let serialized = vec![0u8; 128];
+
+        let envelope = build_payload_envelope(&serialized, 1024).unwrap();
+
+        assert_eq!(envelope, ClipboardPayloadEnvelope::Uncompressed(serialized));
+    }
+
+    #[test]
+    fn payload_envelope_uses_compression_when_smaller() {
+        let serialized = vec![0u8; 4096];
+
+        let envelope = build_payload_envelope(&serialized, 0).unwrap();
+
+        match envelope {
+            ClipboardPayloadEnvelope::Zstd(compressed) => assert!(compressed.len() < serialized.len()),
+            ClipboardPayloadEnvelope::Uncompressed(_) => panic!("expected compressible payload to use zstd"),
+        }
+    }
+
+    #[test]
+    fn payload_envelope_skips_compression_when_not_smaller() {
+        let serialized = vec![1u8, 2, 3, 4];
+
+        let envelope = build_payload_envelope(&serialized, 0).unwrap();
+
+        assert_eq!(envelope, ClipboardPayloadEnvelope::Uncompressed(serialized));
+    }
 }

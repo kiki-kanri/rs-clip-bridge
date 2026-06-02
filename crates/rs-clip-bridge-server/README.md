@@ -115,7 +115,7 @@ rs-clip-bridge-server --config config.toml
 |--------|-------------|
 | `--host` | Server bind address (default: `127.0.0.1`) |
 | `--port` | Server port (default: `8000`) |
-| `--auth-keys` | Comma-separated list of valid auth keys |
+| `--auth-keys` | Comma-separated list of valid auth keys; when omitted/empty, authentication is disabled |
 | `--config` | Path to TOML configuration file |
 | `generate-config-template` | Generate a configuration file template |
 
@@ -125,14 +125,14 @@ rs-clip-bridge-server --config config.toml
 |----------|-------------|
 | `RS_CLIP_SERVER_HOST` | Server bind address |
 | `RS_CLIP_SERVER_PORT` | Server port |
-| `RS_CLIP_AUTH_KEYS` | Comma-separated list of auth keys |
+| `RS_CLIP_AUTH_KEYS` | Comma-separated list of auth keys; when unset/empty, authentication is disabled |
 | `RS_CLIP_SERVER_CONFIG` | Path to configuration file |
 
 ## Protocol
 
 ### Init Handshake
 
-Clients send `(auth_key, channel_id)` during WebSocket connection initialization.
+Clients send `(auth_key, channel_id)` during WebSocket connection initialization. If the server has no configured `auth_keys`, the `auth_key` may be omitted and the connection is allowed. If `auth_keys` is non-empty, the client `auth_key` must match one configured key.
 
 ### Events
 

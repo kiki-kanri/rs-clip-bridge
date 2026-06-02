@@ -48,6 +48,10 @@ pub static MAIN: LazyLock<Arc<WsIoServerNamespace>> = LazyLock::new(|| {
 // Event Handlers
 // ================================================================================================
 
+fn is_authorized(auth_keys: &[String], auth_key: Option<&str>) -> bool {
+    auth_keys.is_empty() || auth_key.is_some_and(|auth_key| auth_keys.iter().any(|key| key == auth_key))
+}
+
 async fn init_response_handler(
     connection: Arc<WsIoServerConnection>,
     data: Option<(Option<String>, String)>,
@@ -55,7 +59,7 @@ async fn init_response_handler(
     let (auth_key, channel_id) = data.context("Invalid init response data")?;
     let config = SERVER_CONFIG.get().context("Server config not initialized")?;
 
-    if config.auth_keys.is_empty() || !config.auth_keys.iter().any(|k| Some(k) == auth_key.as_ref()) {
+    if !is_authorized(&config.auth_keys, auth_key.as_deref()) {
         let _ = connection.disconnect().await;
         bail!("Unauthorized: Auth key mismatch");
     }
@@ -91,4 +95,23 @@ async fn on_event(connection: Arc<WsIoServerConnection>, data: Arc<Vec<u8>>) -> 
     let channel_id = extract_channel_id_from_connection(&connection);
     let _ = connection.to([&channel_id]).emit("event", Some(data.as_ref())).await;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_authorized;
+
+    #[test]
+    fn empty_auth_keys_allow_missing_auth_key() {
+        assert!(is_authorized(&[], None));
+    }
+
+    #[test]
+    fn configured_auth_keys_require_matching_auth_key() {
+        let auth_keys = vec!["secret".to_string()];
+
+        assert!(is_authorized(&auth_keys, Some("secret")));
+        assert!(!is_authorized(&auth_keys, Some("wrong")));
+        assert!(!is_authorized(&auth_keys, None));
+    }
 }
