@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0 - 2026-06-02 07:53
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.1.6...rs-clip-bridge-server-v0.2.0)
+
+### 🚀 Enhancements
+
+- *(protocol)* [**breaking**] harden clipboard sync behavior ([c3ebd4c](https://github.com/kiki-kanri/rs-clip-bridge/commit/c3ebd4c))
+
 ## 0.1.6 - 2026-05-05 05:39
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.1.5...rs-clip-bridge-server-v0.1.6)
