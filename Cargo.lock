@@ -191,9 +191,9 @@ dependencies = [
 
 [[package]]
 name = "bitflags"
-version = "2.11.1"
+version = "2.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4512299f36f043ab09a583e57bceb5a5aab7a73db1805848e8fef3c9e8c78b3"
+checksum = "b4388bee8683e3d04af747c73422af53102d2bd24d9eadb6cbc100baef4b43f8"
 
 [[package]]
 name = "block-buffer"
@@ -803,9 +803,9 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "http"
-version = "1.4.1"
+version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8be7462df143984c4598a256ef469b251d7d7f9e271135073e78fc535414f3d0"
+checksum = "6970f50e31d6fc17d3fa27329444bfa74e196cf62e95052a3f6fee181dba6425"
 dependencies = [
  "bytes",
  "itoa",
@@ -1104,9 +1104,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.30"
+version = "0.4.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "616ec5685824bcc94416c6d4a7a446eea774a31efd7062c8480ba6fd06d7a6e5"
+checksum = "953f07c43838f8e6f9758cab68bf5bed85465e7587ebe0b823f1bcd81978ad3a"
 
 [[package]]
 name = "matchit"
@@ -2703,9 +2703,9 @@ checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
 
 [[package]]
 name = "wsio-client"
-version = "0.8.5"
+version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31ada7234aa25b46a757fb2bd788efc2c53ece6965bdec52bb58e8c0e8e9094d"
+checksum = "fa875f2e0182ef4ad4d2965af7fa18227f13e93c54d5625872391caeae6b1ea4"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -2722,9 +2722,9 @@ dependencies = [
 
 [[package]]
 name = "wsio-core"
-version = "0.12.5"
+version = "0.12.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2dae79f3418cefab06356e114a700f5b5869c8bbae7565fc6028af19e1ff2ba"
+checksum = "db5b0c787b905589967088613eb955f220394d2973cb48c45035664c6040ea5c"
 dependencies = [
  "anyhow",
  "kikiutils",
@@ -2740,9 +2740,9 @@ dependencies = [
 
 [[package]]
 name = "wsio-server"
-version = "0.12.2"
+version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71dd3ec4c80d5f972ddfd3b1ffb5d2f39bc89084a67fd27ede0b344fbc3805ac"
+checksum = "4b7165d7a924c3b1b9e63ea6cd2dd4515adfd067db19a34eb0ffbed43dac96e2"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -2794,9 +2794,9 @@ checksum = "ea6fc2961e4ef194dcbfe56bb845534d0dc8098940c7e5c012a258bfec6701bd"
 
 [[package]]
 name = "yoke"
-version = "0.8.2"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abe8c5fda708d9ca3df187cae8bfb9ceda00dd96231bed36e445a1a48e66f9ca"
+checksum = "709fe23a0424b6a435d82152b1bd3fdfb0833487d5fa90d05d42762a9891fef5"
 dependencies = [
  "stable_deref_trait",
  "yoke-derive",
