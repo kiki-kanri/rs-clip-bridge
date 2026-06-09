@@ -17,5 +17,10 @@ target/
 
 ### Other ###
 
+# OMX
+.omx/
+
 # Test-related files
 coverage/
+
+### Custom ###
