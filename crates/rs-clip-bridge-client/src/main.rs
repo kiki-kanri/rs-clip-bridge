@@ -1,3 +1,5 @@
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+
 #[cfg(unix)]
 use std::env::set_var;
 use std::{
@@ -307,7 +309,10 @@ async fn main() -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use postcard::to_allocvec;
+
     use super::*;
+    use crate::crypto::compress;
 
     #[test]
     fn client_config_default_max_image_size() {
@@ -324,7 +329,8 @@ mod tests {
             })
             .load()
             .unwrap();
-        assert_eq!(config.max_image_size_bytes, 10485760);
+
+        assert_eq!(config.max_image_size_bytes, 10_485_760);
     }
 
     #[test]
@@ -342,16 +348,9 @@ mod tests {
             })
             .load()
             .unwrap();
+
         assert_eq!(config.min_compress_size_bytes, 1024);
     }
-}
-
-#[cfg(test)]
-mod payload_tests {
-    use postcard::to_allocvec;
-
-    use super::*;
-    use crate::crypto::compress;
 
     #[test]
     fn decode_uncompressed_payload_envelope() {

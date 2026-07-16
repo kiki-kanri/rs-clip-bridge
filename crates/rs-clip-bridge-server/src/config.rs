@@ -1,7 +1,7 @@
 use confique::Config;
 
 #[derive(Clone, Config, Debug)]
-pub struct ServerConfig {
+pub(crate) struct ServerConfig {
     /// List of auth keys
     #[config(default = [])]
     pub auth_keys: Vec<String>,

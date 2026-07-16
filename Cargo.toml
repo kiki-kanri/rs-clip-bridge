@@ -11,8 +11,17 @@ edition = "2024"
 license = "MIT"
 repository = "https://github.com/kiki-kanri/rs-clip-bridge"
 
-categories = []
-keywords = []
+categories = [
+  "command-line-utilities",
+  "network-programming",
+]
+
+keywords = [
+  "clipboard",
+  "encryption",
+  "synchronization",
+  "websocket",
+]
 
 # Optional cargo/tool metadata.
 # [package.metadata]

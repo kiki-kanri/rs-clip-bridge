@@ -1617,7 +1617,6 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
- "tracing-subscriber",
  "wsio-client",
  "zstd",
 ]
@@ -1631,11 +1630,9 @@ dependencies = [
  "clap",
  "confique",
  "kikiutils",
- "serde",
  "tokio",
  "tokio-util",
  "tracing",
- "tracing-subscriber",
  "wsio-server",
 ]
 

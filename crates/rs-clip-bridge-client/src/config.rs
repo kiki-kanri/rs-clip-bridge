@@ -1,7 +1,7 @@
 use confique::Config;
 
 #[derive(Clone, Config)]
-pub struct ClientConfig {
+pub(crate) struct ClientConfig {
     /// Authentication key for server access and grouping (optional)
     pub auth_key: Option<String>,
 
@@ -15,8 +15,8 @@ pub struct ClientConfig {
     /// Encryption key for E2E encryption (32 bytes / 64 hex chars, required)
     pub encrypt_key: String,
 
-    /// Maximum image size in bytes to sync (e.g., 5242880 for 5 MB, default: 10485760 for 10 MB)
-    #[config(default = 10485760)]
+    /// Maximum image size in bytes to sync (e.g., 5_242_880 for 5 MB, default: 10_485_760 for 10 MB)
+    #[config(default = 10_485_760)]
     pub max_image_size_bytes: usize,
 
     /// Minimum size in bytes to trigger compression (default: 1 KB)

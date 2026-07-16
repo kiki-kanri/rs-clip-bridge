@@ -23,25 +23,29 @@ use crate::{
 // ================================================================================================
 
 /// Extension stored on each connection to identify its channel
-pub struct ChannelId(pub String);
+pub(crate) struct ChannelId(pub String);
 
 /// Extract channel ID from a connection's extensions
-pub fn extract_channel_id_from_connection(connection: &Arc<WsIoServerConnection>) -> String {
-    connection.extensions().get::<ChannelId>().unwrap().0.clone()
+pub(crate) fn extract_channel_id_from_connection(connection: &Arc<WsIoServerConnection>) -> Result<String> {
+    connection
+        .extensions()
+        .get::<ChannelId>()
+        .map(|channel_id| channel_id.0.clone())
+        .context("Connection channel ID not initialized")
 }
 
 // ================================================================================================
 // Namespace Definition
 // ================================================================================================
 
-pub static MAIN: LazyLock<Arc<WsIoServerNamespace>> = LazyLock::new(|| {
+pub(crate) static MAIN: LazyLock<Arc<WsIoServerNamespace>> = LazyLock::new(|| {
     WS_IO_SERVER
         .new_namespace_builder("/")
         .on_connect(on_connect)
         .on_ready(on_ready)
         .with_init_response(init_response_handler)
         .register()
-        .unwrap()
+        .unwrap_or_else(|error| panic!("failed to register main namespace: {error}"))
 });
 
 // ================================================================================================
@@ -82,7 +86,7 @@ async fn on_connect(connection: Arc<WsIoServerConnection>) -> Result<()> {
 }
 
 async fn on_ready(connection: Arc<WsIoServerConnection>) -> Result<()> {
-    let channel_id = extract_channel_id_from_connection(&connection);
+    let channel_id = extract_channel_id_from_connection(&connection)?;
     connection.join([channel_id.clone()]);
 
     tracing::info!(channel_id = %channel_id, "Joined channel");
@@ -92,7 +96,7 @@ async fn on_ready(connection: Arc<WsIoServerConnection>) -> Result<()> {
 
 /// Handle incoming clipboard event from a client
 async fn on_event(connection: Arc<WsIoServerConnection>, data: Arc<Vec<u8>>) -> Result<()> {
-    let channel_id = extract_channel_id_from_connection(&connection);
+    let channel_id = extract_channel_id_from_connection(&connection)?;
     let _ = connection.to([&channel_id]).emit("event", Some(data.as_ref())).await;
     Ok(())
 }

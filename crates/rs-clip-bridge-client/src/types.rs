@@ -5,7 +5,7 @@ use serde::{
 
 /// Clipboard content type
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
-pub enum ClipboardContent {
+pub(crate) enum ClipboardContent {
     Image {
         bytes: Vec<u8>,
         height: usize,
@@ -20,7 +20,7 @@ pub enum ClipboardContent {
 /// This is serialized with Postcard before encryption. It intentionally replaces
 /// the previous magic-byte framing, so old clients are not wire-compatible.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
-pub enum ClipboardPayloadEnvelope {
+pub(crate) enum ClipboardPayloadEnvelope {
     Uncompressed(Vec<u8>),
     Zstd(Vec<u8>),
 }
@@ -29,7 +29,7 @@ pub enum ClipboardPayloadEnvelope {
 ///
 /// Content is encrypted using ChaCha20-Poly1305.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ClipboardEventData {
+pub(crate) struct ClipboardEventData {
     /// Optional device name that originated this event
     pub device_name: Option<String>,
 
@@ -62,7 +62,7 @@ mod tests {
             device_name: Some("test-device".to_string()),
             content: vec![0xde, 0xad, 0xbe, 0xef],
             nonce: vec![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c],
-            timestamp: 1234567890,
+            timestamp: 1_234_567_890,
         };
 
         let encoded = to_allocvec(&data).unwrap();
@@ -140,7 +140,7 @@ mod tests {
                 assert_eq!(bytes, large_bytes);
                 assert_eq!(height, 1920);
                 assert_eq!(width, 1080);
-            }
+            },
             _ => panic!("Expected Image variant"),
         }
     }

@@ -4,6 +4,7 @@ use std::time::{
 };
 
 use anyhow::{
+    Context,
     Result,
     anyhow,
 };
@@ -31,12 +32,9 @@ use crate::{
 };
 
 pub(crate) async fn run_clipboard_sender(mut rx: UnboundedReceiver<ClipboardContent>, client: WsIoClient) {
-    let key = match CRYPTO_KEY.get() {
-        Some(k) => k,
-        None => {
-            tracing::error!("Crypto key not initialized");
-            return;
-        }
+    let Some(key) = CRYPTO_KEY.get() else {
+        tracing::error!("Crypto key not initialized");
+        return;
     };
 
     loop {
@@ -76,7 +74,7 @@ async fn send_clipboard(client: &WsIoClient, key: &chacha20poly1305::Key, conten
     // Compress only when content exceeds the threshold and compression actually saves bytes.
     let min_size = CLIENT_CONFIG
         .get()
-        .expect("CLIENT_CONFIG must be initialized")
+        .context("CLIENT_CONFIG must be initialized")?
         .min_compress_size_bytes;
 
     let envelope = build_payload_envelope(&serialized, min_size)?;

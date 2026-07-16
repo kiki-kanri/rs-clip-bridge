@@ -42,7 +42,7 @@ impl ClipboardHandler for ClipboardMonitor {
                 }
 
                 CallbackResult::Next
-            }
+            },
             _ => self.try_get_and_send_image(),
         }
     }
@@ -54,7 +54,7 @@ impl ClipboardHandler for ClipboardMonitor {
 }
 
 impl ClipboardMonitor {
-    pub fn new(tx: UnboundedSender<ClipboardContent>, max_image_size_bytes: usize) -> Result<Self> {
+    pub(crate) fn new(tx: UnboundedSender<ClipboardContent>, max_image_size_bytes: usize) -> Result<Self> {
         Ok(Self {
             ctx: Clipboard::new().map_err(|e| anyhow!("Clipboard init error: {e}"))?,
             last_text: String::new(),
@@ -108,7 +108,7 @@ impl ClipboardMonitor {
                     tracing::error!("Failed to send clipboard to channel: {e}");
                     return CallbackResult::Stop;
                 }
-            }
+            },
             Err(e) => tracing::debug!("No image on clipboard: {e}"),
         }
 
@@ -116,7 +116,7 @@ impl ClipboardMonitor {
     }
 }
 
-pub fn spawn_clipboard_monitor(tx: UnboundedSender<ClipboardContent>, max_image_size_bytes: usize) {
+pub(crate) fn spawn_clipboard_monitor(tx: UnboundedSender<ClipboardContent>, max_image_size_bytes: usize) {
     spawn(move || {
         if let Err(e) = (|| -> Result<()> {
             let monitor = ClipboardMonitor::new(tx, max_image_size_bytes)?;

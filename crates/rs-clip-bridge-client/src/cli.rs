@@ -1,5 +1,9 @@
 use std::{
     fs::write,
+    io::{
+        Write,
+        stdout,
+    },
     path::PathBuf,
 };
 
@@ -22,7 +26,7 @@ use crate::config::ClientConfig;
     about = "rs-clip-bridge-client: Cross-platform clipboard sync client with E2E encryption.",
     long_about = "A client that monitors local clipboard changes and synchronizes them with a remote server via WebSockets. All clipboard data is encrypted using ChaCha20-Poly1305."
 )]
-pub struct Cli {
+pub(crate) struct Cli {
     /// Authentication key for server access (optional)
     #[arg(short, long, env = "RS_CLIP_AUTH_KEY")]
     pub auth_key: Option<String>,
@@ -61,7 +65,7 @@ pub struct Cli {
 }
 
 #[derive(Subcommand)]
-pub enum Commands {
+pub(crate) enum Commands {
     /// Generate a configuration file template
     GenerateConfigTemplate {
         /// Output path (default: stdout)
@@ -70,13 +74,13 @@ pub enum Commands {
     },
 }
 
-pub fn run_generate_config_template(output: Option<PathBuf>) -> Result<()> {
+pub(crate) fn run_generate_config_template(output: Option<PathBuf>) -> Result<()> {
     let content = template::<ClientConfig>(Default::default());
     match output {
         Some(path) => {
             write(&path, &content).with_context(|| format!("Failed to write config template to {}", path.display()))?
-        }
-        None => print!("{}", content),
+        },
+        None => stdout().lock().write_all(content.as_bytes())?,
     }
 
     Ok(())
@@ -122,7 +126,7 @@ mod tests {
         ])
         .unwrap();
         assert_eq!(cli.auth_key, Some("my-secret-key".into()));
-        assert_eq!(cli.max_image_size_bytes, Some(5242880));
+        assert_eq!(cli.max_image_size_bytes, Some(5_242_880));
         assert_eq!(cli.min_compress_size_bytes, Some(2048));
     }
 

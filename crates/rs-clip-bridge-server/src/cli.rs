@@ -1,5 +1,9 @@
 use std::{
     fs::write,
+    io::{
+        Write,
+        stdout,
+    },
     path::PathBuf,
 };
 
@@ -23,7 +27,7 @@ use crate::config::ServerConfig;
     long_about = "A secure tool to synchronize clipboard content across multiple devices. \
                   Supports text and image clipboard sync, with server-side grouping via auth keys."
 )]
-pub struct Cli {
+pub(crate) struct Cli {
     /// Authentication keys for server access (multiple allowed).
     /// Can be set via the RS_CLIP_AUTH_KEYS environment variable.
     #[arg(short, long, value_delimiter = ',', env = "RS_CLIP_AUTH_KEYS")]
@@ -48,7 +52,7 @@ pub struct Cli {
 }
 
 #[derive(Subcommand)]
-pub enum Commands {
+pub(crate) enum Commands {
     /// Generate a configuration file template
     GenerateConfigTemplate {
         /// Output path (default: stdout)
@@ -57,13 +61,13 @@ pub enum Commands {
     },
 }
 
-pub fn run_generate_config_template(output: Option<PathBuf>) -> Result<()> {
+pub(crate) fn run_generate_config_template(output: Option<PathBuf>) -> Result<()> {
     let content = template::<ServerConfig>(Default::default());
     match output {
         Some(path) => {
             write(&path, &content).with_context(|| format!("Failed to write config template to {}", path.display()))?
-        }
-        None => print!("{}", content),
+        },
+        None => stdout().lock().write_all(content.as_bytes())?,
     }
 
     Ok(())

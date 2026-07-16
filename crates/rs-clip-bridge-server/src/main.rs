@@ -1,3 +1,5 @@
+#![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
+
 use std::{
     process::exit,
     sync::{
@@ -31,8 +33,6 @@ use tokio::{
     select,
 };
 use tokio_util::sync::CancellationToken;
-use tracing::level_filters::LevelFilter;
-use tracing_subscriber::Layer;
 use wsio_server::{
     WsIoServer,
     core::packet::codecs::WsIoPacketCodec,
