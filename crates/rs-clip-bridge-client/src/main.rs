@@ -23,12 +23,12 @@ use chacha20poly1305::Key;
 use clap::Parser;
 use confique::Config;
 use kikiutils::{
+    logger::{
+        init_logger,
+        options::LoggerInitOptions,
+    },
     signal::wait_for_shutdown_signal,
     task::manager::TaskManager,
-    tracing::{
-        init_tracing_with_layer,
-        make_tracing_fmt_layer_with_local_time,
-    },
 };
 use postcard::from_bytes;
 use tokio::{
@@ -36,8 +36,6 @@ use tokio::{
     sync::mpsc::unbounded_channel,
 };
 use tokio_util::sync::CancellationToken;
-use tracing::level_filters::LevelFilter;
-use tracing_subscriber::Layer;
 use wsio_client::{
     WsIoClient,
     core::packet::codecs::WsIoPacketCodec,
@@ -107,14 +105,6 @@ pub fn init_rustls_crypto_provider() -> Result<()> {
     Ok(())
 }
 
-fn init_tracing() -> Result<()> {
-    init_tracing_with_layer(
-        make_tracing_fmt_layer_with_local_time()?
-            .with_target(false)
-            .with_filter(LevelFilter::INFO),
-    )
-}
-
 fn load_config() -> Result<ClientConfig> {
     let cli = Cli::parse();
 
@@ -124,7 +114,7 @@ fn load_config() -> Result<ClientConfig> {
             Commands::GenerateConfigTemplate { output } => {
                 run_generate_config_template(output)?;
                 exit(0);
-            }
+            },
         }
     }
 
@@ -218,7 +208,7 @@ async fn handle_server_event(_: Arc<WsIoClientSession>, data_bytes: Arc<Vec<u8>>
             clipboard.set_text(text).context("Clipboard write failed")?;
 
             tracing::info!("Received clipboard from server: {} bytes", decompressed.len());
-        }
+        },
         ClipboardContent::Image { bytes, height, width } => {
             clipboard
                 .set_image(ImageData {
@@ -234,7 +224,7 @@ async fn handle_server_event(_: Arc<WsIoClientSession>, data_bytes: Arc<Vec<u8>>
                 height,
                 bytes.len()
             );
-        }
+        },
         ClipboardContent::Raw(_) => tracing::warn!("Raw clipboard not supported"),
     }
 
@@ -266,7 +256,7 @@ const VERSION: &str = concat!(env!("CARGO_PKG_VERSION"));
 #[tokio::main]
 async fn main() -> Result<()> {
     // --- Init ---
-    init_tracing()?;
+    init_logger(LoggerInitOptions::default())?;
     init_rustls_crypto_provider()?;
     tracing::info!(version = VERSION, "Starting rs-clip-bridge-client");
 

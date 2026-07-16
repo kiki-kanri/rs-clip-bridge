@@ -19,12 +19,12 @@ use axum::{
 use clap::Parser;
 use confique::Config;
 use kikiutils::{
+    logger::{
+        init_logger,
+        options::LoggerInitOptions,
+    },
     signal::wait_for_shutdown_signal,
     task::manager::TaskManager,
-    tracing::{
-        init_tracing_with_layer,
-        make_tracing_fmt_layer_with_local_time,
-    },
 };
 use tokio::{
     net::TcpListener,
@@ -69,14 +69,6 @@ pub static WS_IO_SERVER: LazyLock<WsIoServer> =
 // Initialization
 // ================================================================================================
 
-fn init_tracing() -> Result<()> {
-    init_tracing_with_layer(
-        make_tracing_fmt_layer_with_local_time()?
-            .with_target(false)
-            .with_filter(LevelFilter::INFO),
-    )
-}
-
 const VERSION: &str = concat!(env!("CARGO_PKG_VERSION"));
 
 fn load_config() -> Result<ServerConfig> {
@@ -88,7 +80,7 @@ fn load_config() -> Result<ServerConfig> {
             Commands::GenerateConfigTemplate { output } => {
                 run_generate_config_template(output)?;
                 exit(0);
-            }
+            },
         }
     }
 
@@ -173,7 +165,7 @@ fn shutdown() {
 #[tokio::main]
 async fn main() -> Result<()> {
     // --- Init ---
-    init_tracing()?;
+    init_logger(LoggerInitOptions::default())?;
     tracing::info!(version = VERSION, "Starting rs-clip-bridge-server");
 
     // --- Setup ---
