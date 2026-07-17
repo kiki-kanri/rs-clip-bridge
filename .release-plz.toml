@@ -5,7 +5,7 @@ header = """
 """
 
 body = """
-## {{ version }} - {{ timestamp | date(format="%Y-%m-%d %H:%M") }}
+## {{ version }} - {{ timestamp | date(format="%Y-%m-%dT%H:%M:%SZ") }}
 
 {% if release_link %}[compare changes]({{ release_link }}){% endif %}
 {% for group, commits in commits | group_by(attribute="group") %}
@@ -13,9 +13,9 @@ body = """
 
 {% for commit in commits %}
 {%- if commit.scope -%}
-- *({{ commit.scope }})* {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}{%- if commit.links %} ({% for link in commit.links %}[{{ link.text }}]({{ link.href }}) {% endfor -%}){% endif %} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/kiki-kanri/rs-clip-bridge/commit/{{ commit.id | truncate(length=7, end="") }}))
+- *({{ commit.scope }})* {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}{%- if commit.links %} ({% for link in commit.links %}[{{ link.text }}]({{ link.href }}) {% endfor -%}){% endif %} ([{{ commit.id | truncate(length=7, end="") }}]({{ remote.link }}/commit/{{ commit.id }}))
 {% else -%}
-- {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}{%- if commit.links %} ({% for link in commit.links %}[{{ link.text }}]({{ link.href }}) {% endfor -%}){% endif %} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/kiki-kanri/rs-clip-bridge/commit/{{ commit.id | truncate(length=7, end="") }}))
+- {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }}{%- if commit.links %} ({% for link in commit.links %}[{{ link.text }}]({{ link.href }}) {% endfor -%}){% endif %} ([{{ commit.id | truncate(length=7, end="") }}]({{ remote.link }}/commit/{{ commit.id }}))
 {% endif -%}
 {% endfor -%}
 {% endfor %}
