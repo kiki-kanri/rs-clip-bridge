@@ -17,6 +17,7 @@ RUN rustup show
 ## Copy Cargo config and manifest for dependency caching
 COPY ./.cargo ./.cargo
 COPY ./Cargo.lock ./Cargo.toml ./
+COPY ./crates/rs-clip-bridge-client/Cargo.toml ./crates/rs-clip-bridge-client/
 COPY ./crates/rs-clip-bridge-server/Cargo.toml ./crates/rs-clip-bridge-server/
 
 ## Prebuild a dummy project to populate compiled dependency cache.
@@ -24,7 +25,8 @@ COPY ./crates/rs-clip-bridge-server/Cargo.toml ./crates/rs-clip-bridge-server/
 RUN --mount=type=cache,id=rs-clip-bridge-server-cargo-git,target=/usr/local/cargo/git \
     --mount=type=cache,id=rs-clip-bridge-server-cargo-registry,target=/usr/local/cargo/registry \
     --mount=type=cache,id=rs-clip-bridge-server-target-${TARGETPLATFORM},target=/cargo-target \
-    mkdir -p ./crates/rs-clip-bridge-server/src && \
+    mkdir -p ./crates/rs-clip-bridge-client/src ./crates/rs-clip-bridge-server/src && \
+    echo 'fn main() {}' >./crates/rs-clip-bridge-client/src/main.rs && \
     echo 'fn main() {}' >./crates/rs-clip-bridge-server/src/main.rs && \
     CARGO_TARGET_DIR=/cargo-target cargo b -r -p rs-clip-bridge-server --all-features --all-targets --locked && \
     rm -rf ./crates/rs-clip-bridge-server/src
@@ -36,8 +38,8 @@ RUN --mount=type=cache,id=rs-clip-bridge-server-cargo-git,target=/usr/local/carg
     --mount=type=cache,id=rs-clip-bridge-server-cargo-registry,target=/usr/local/cargo/registry \
     --mount=type=cache,id=rs-clip-bridge-server-target-${TARGETPLATFORM},target=/cargo-target \
     touch ./crates/rs-clip-bridge-server/src/main.rs && \
-    cargo format && \
-    CARGO_TARGET_DIR=/cargo-target cargo clippy -r --all-features --all-targets --locked -- -D warnings && \
+    cargo fmt -p rs-clip-bridge-server -- --check && \
+    CARGO_TARGET_DIR=/cargo-target cargo clippy -r -p rs-clip-bridge-server --all-features --all-targets --locked -- -D warnings && \
     CARGO_TARGET_DIR=/cargo-target cargo b -r -p rs-clip-bridge-server --all-features --locked && \
     cp -p /cargo-target/release/rs-clip-bridge-server ./rs-clip-bridge-server
 
