@@ -1,6 +1,6 @@
 [package]
 name = "rs-clip-bridge-client"
-version = "0.2.0"
+version = "0.2.1"
 edition.workspace = true
 
 description = "Cross-platform clipboard sync client for rs-clip-bridge. Monitors local clipboard changes and synchronizes them with a remote server via WebSockets. All clipboard data is encrypted using ChaCha20-Poly1305."

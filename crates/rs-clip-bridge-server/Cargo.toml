@@ -1,6 +1,6 @@
 [package]
 name = "rs-clip-bridge-server"
-version = "0.2.0"
+version = "0.2.1"
 edition.workspace = true
 
 description = "WebSocket server for rs-clip-bridge clipboard synchronization. Relays encrypted clipboard events between clients within the same channel."

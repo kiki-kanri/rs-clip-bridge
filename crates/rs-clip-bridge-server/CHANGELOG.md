@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.2.1 - 2026-07-17T03:41:31Z
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.2.0...rs-clip-bridge-server-v0.2.1)
+
+### 🏡 Chore
+
+- upgrade deps ([3a71698](https://github.com/kiki-kanri/rs-clip-bridge/commit/3a716987334c57cbb8a84700fcaac62ceb17a516))
+- refresh crate manifests and dependencies ([87c6105](https://github.com/kiki-kanri/rs-clip-bridge/commit/87c6105df1bfac20dc2755e67e0caf61cae8eb4a))
+- upgrade deps ([6ae83c4](https://github.com/kiki-kanri/rs-clip-bridge/commit/6ae83c4decab81c95270e066a9e67063c6693036))
+
+### 💅 Refactors
+
+- migrate to kikiutils logger initialization ([8970783](https://github.com/kiki-kanri/rs-clip-bridge/commit/897078312b3f731e039c98cc3f304ef14d13a9a4))
+
+### 🩹 Fixes
+
+- *(lint)* resolve strict workspace warnings ([a9df81d](https://github.com/kiki-kanri/rs-clip-bridge/commit/a9df81d324937e78cc761a63a97383c43d8e27bd))
+
 ## 0.2.0 - 2026-06-02 07:53
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.1.6...rs-clip-bridge-server-v0.2.0)
