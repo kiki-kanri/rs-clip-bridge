@@ -147,7 +147,7 @@ fn load_config() -> Result<ClientConfig> {
 }
 
 fn setup_ws_client(config: ClientConfig) -> Result<WsIoClient> {
-    let client = WsIoClient::builder(config.server_url.as_ref())?
+    let client = WsIoClient::builder(&config.server_url)?
         .on_session_close(|_| async {
             tracing::info!("Disconnected from server");
             Ok(())
