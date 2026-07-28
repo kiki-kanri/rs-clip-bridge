@@ -68,13 +68,13 @@ full = ["all"]
 # =============================================================================
 
 [dependencies]
-anyhow = "1.0.103"
+anyhow = "1.0.104"
 axum = "0.8.9"
-clap = { version = "4.6.2", features = ["derive", "env"] }
+clap = { version = "4.6.4", features = ["derive", "env"] }
 confique = { version = "0.4.0", features = ["toml"] }
 kikiutils = { version = "0.11.2", features = ["logger", "signal", "task"] }
-tokio = { version = "1.52.4", features = ["rt-multi-thread"] }
-tokio-util = "0.7.18"
+tokio = { version = "1.53.1", features = ["rt-multi-thread"] }
+tokio-util = "0.7.19"
 tracing = "0.1.44"
 wsio-server = { version = "0.12.8", features = ["connection-extensions", "tower", "packet-codec-postcard"] }
 
