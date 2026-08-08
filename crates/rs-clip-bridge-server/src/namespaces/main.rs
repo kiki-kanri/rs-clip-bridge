@@ -64,7 +64,7 @@ async fn init_response_handler(
     let config = SERVER_CONFIG.get().context("Server config not initialized")?;
 
     if !is_authorized(&config.auth_keys, auth_key.as_deref()) {
-        let _ = connection.disconnect().await;
+        let () = connection.disconnect().await;
         bail!("Unauthorized: Auth key mismatch");
     }
 

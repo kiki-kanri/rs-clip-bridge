@@ -15,7 +15,7 @@ pub(crate) struct ClientConfig {
     /// Encryption key for E2E encryption (32 bytes / 64 hex chars, required)
     pub encrypt_key: String,
 
-    /// Maximum image size in bytes to sync (e.g., 5_242_880 for 5 MB, default: 10_485_760 for 10 MB)
+    /// Maximum image size in bytes to sync (e.g., `5_242_880` for 5 MB, default: `10_485_760` for 10 MB)
     #[config(default = 10_485_760)]
     pub max_image_size_bytes: usize,
 
@@ -23,6 +23,6 @@ pub(crate) struct ClientConfig {
     #[config(default = 1024)]
     pub min_compress_size_bytes: usize,
 
-    /// Server connection URL (e.g., ws://localhost:8080)
+    /// Server connection URL (e.g., <ws://localhost:8080>)
     pub server_url: String,
 }

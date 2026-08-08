@@ -169,7 +169,7 @@ fn setup_ws_client(config: ClientConfig) -> Result<WsIoClient> {
 }
 
 #[cfg(unix)]
-fn setup_display(display: &Option<String>) {
+fn setup_display(display: Option<&str>) {
     if let Some(d) = display {
         // SAFETY: safe before async runtime starts
         unsafe { set_var("DISPLAY", d) };
@@ -240,7 +240,7 @@ async fn handle_server_event(_: Arc<WsIoClientSession>, data_bytes: Arc<Vec<u8>>
 async fn run_signal_handler() {
     select! {
         _ = wait_for_shutdown_signal() => {},
-        _ = APP_SHUTDOWN_TOKEN.cancelled() => {},
+        () = APP_SHUTDOWN_TOKEN.cancelled() => {},
     }
     shutdown();
 }
@@ -275,7 +275,7 @@ async fn main() -> Result<()> {
     CRYPTO_KEY.set(key).ok();
 
     #[cfg(unix)]
-    setup_display(&config.display);
+    setup_display(config.display.as_deref());
 
     let ws_client = setup_ws_client(config.clone())?;
 

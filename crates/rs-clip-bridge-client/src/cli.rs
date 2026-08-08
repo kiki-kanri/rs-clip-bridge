@@ -15,7 +15,10 @@ use clap::{
     Parser,
     Subcommand,
 };
-use confique::toml::template;
+use confique::toml::{
+    FormatOptions,
+    template,
+};
 
 use crate::config::ClientConfig;
 
@@ -59,7 +62,7 @@ pub(crate) struct Cli {
     #[arg(long, env = "RS_CLIP_MIN_COMPRESS_SIZE_BYTES")]
     pub min_compress_size_bytes: Option<usize>,
 
-    /// WebSocket server URL (e.g., ws://127.0.0.1:8080 or wss://example.com)
+    /// WebSocket server URL (e.g., <ws://127.0.0.1:8080> or <wss://example.com>)
     #[arg(short, long, value_name = "URL", env = "RS_CLIP_SERVER_URL")]
     pub server_url: Option<String>,
 }
@@ -75,10 +78,10 @@ pub(crate) enum Commands {
 }
 
 pub(crate) fn run_generate_config_template(output: Option<PathBuf>) -> Result<()> {
-    let content = template::<ClientConfig>(Default::default());
+    let content = template::<ClientConfig>(FormatOptions::default());
     match output {
         Some(path) => {
-            write(&path, &content).with_context(|| format!("Failed to write config template to {}", path.display()))?
+            write(&path, &content).with_context(|| format!("Failed to write config template to {}", path.display()))?;
         },
         None => stdout().lock().write_all(content.as_bytes())?,
     }

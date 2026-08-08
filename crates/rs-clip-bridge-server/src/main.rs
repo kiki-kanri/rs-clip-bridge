@@ -148,7 +148,7 @@ async fn run_server(cancel: CancellationToken) -> Result<()> {
 async fn run_signal_handler() {
     select! {
         _ = wait_for_shutdown_signal() => {},
-        _ = APP_SHUTDOWN_TOKEN.cancelled() => {},
+        () = APP_SHUTDOWN_TOKEN.cancelled() => {},
     }
 
     shutdown();

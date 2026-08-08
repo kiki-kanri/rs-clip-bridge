@@ -1,10 +1,11 @@
 //! E2E Encryption using ChaCha20-Poly1305
 //!
-//! The encrypt_key is a 64-character hex string (32 bytes).
+//! The `encrypt_key` is a 64-character hex string (32 bytes).
 //! A random 12-byte nonce is generated for each encryption.
 
 use std::{
     io::copy,
+    num::NonZero,
     thread::available_parallelism,
 };
 
@@ -41,7 +42,7 @@ pub(crate) fn parse_key(hex_key: &str) -> Result<Key> {
 }
 
 /// Encrypt plaintext with ChaCha20-Poly1305.
-/// Returns (nonce, content_with_tag) — content is ciphertext || poly1305_tag.
+/// Returns (nonce, `content_with_tag`) — content is ciphertext || `poly1305_tag`.
 pub(crate) fn encrypt(key: &Key, plaintext: &[u8]) -> Result<(Vec<u8>, Vec<u8>)> {
     let cipher = ChaCha20Poly1305::new(key);
 
@@ -56,7 +57,7 @@ pub(crate) fn encrypt(key: &Key, plaintext: &[u8]) -> Result<(Vec<u8>, Vec<u8>)>
     Ok((nonce_bytes.to_vec(), content_with_tag))
 }
 
-/// Decrypt content_with_tag (ciphertext || poly1305_tag) using ChaCha20-Poly1305.
+/// Decrypt `content_with_tag` (ciphertext || `poly1305_tag`) using ChaCha20-Poly1305.
 pub(crate) fn decrypt(key: &Key, nonce: &[u8], content_with_tag: &[u8]) -> Result<Vec<u8>> {
     let cipher = ChaCha20Poly1305::new(key);
 
@@ -74,11 +75,12 @@ pub(crate) fn decrypt(key: &Key, nonce: &[u8], content_with_tag: &[u8]) -> Resul
 /// Compress data using zstd with multi-threading (zstdmt).
 /// Uses level 1 (fast) for near-lz4 speed with better compression.
 pub(crate) fn compress(data: &[u8]) -> Result<Vec<u8>> {
-    let workers = available_parallelism().map(|n| n.get()).unwrap_or(1);
+    let workers = available_parallelism().map_or(1, NonZero::get);
+    let workers = u32::try_from(workers).unwrap_or(u32::MAX);
     let mut result = Vec::new();
 
     let mut encoder = Encoder::new(&mut result, 1)?;
-    encoder.multithread(workers as u32)?;
+    encoder.multithread(workers)?;
     copy(&mut &data[..], &mut encoder)?;
     encoder.finish()?;
 
@@ -127,8 +129,7 @@ mod tests {
         let msg = err.to_string();
         assert!(
             msg.contains("Invalid") || msg.contains("Odd") || msg.contains("Hex"),
-            "unexpected error: {}",
-            msg
+            "unexpected error: {msg}"
         );
     }
 

@@ -39,7 +39,7 @@ pub(crate) async fn run_clipboard_sender(mut rx: UnboundedReceiver<ClipboardCont
 
     loop {
         select! {
-            _ = APP_SHUTDOWN_TOKEN.cancelled() => break,
+            () = APP_SHUTDOWN_TOKEN.cancelled() => break,
             Some(content) = rx.recv() => {
                 if let Err(e) = send_clipboard(&client, key, content).await {
                     tracing::error!("Send clipboard failed: {e}");
@@ -83,8 +83,7 @@ async fn send_clipboard(client: &WsIoClient, key: &chacha20poly1305::Key, conten
 
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_millis() as u64)
-        .unwrap_or(0);
+        .map_or(0, |d| u64::try_from(d.as_millis()).unwrap_or(u64::MAX));
 
     // Encrypt serialized + compressed content
     let (nonce, encrypted) = encrypt(key, &to_encrypt).map_err(|e| anyhow!("Encryption failed: {e}"))?;
@@ -101,7 +100,7 @@ async fn send_clipboard(client: &WsIoClient, key: &chacha20poly1305::Key, conten
     *LAST_CONTENT_BYTES.write().await = serialized;
 
     match client.emit::<Vec<u8>>("event", Some(&to_allocvec(&event_data)?)).await {
-        Ok(_) => tracing::info!("Sent clipboard: {serialized_size} bytes"),
+        Ok(()) => tracing::info!("Sent clipboard: {serialized_size} bytes"),
         Err(e) => tracing::error!("Failed to emit clipboard event: {e}"),
     }
 

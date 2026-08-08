@@ -15,7 +15,10 @@ use clap::{
     Parser,
     Subcommand,
 };
-use confique::toml::template;
+use confique::toml::{
+    FormatOptions,
+    template,
+};
 
 use crate::config::ServerConfig;
 
@@ -29,7 +32,7 @@ use crate::config::ServerConfig;
 )]
 pub(crate) struct Cli {
     /// Authentication keys for server access (multiple allowed).
-    /// Can be set via the RS_CLIP_AUTH_KEYS environment variable.
+    /// Can be set via the `RS_CLIP_AUTH_KEYS` environment variable.
     #[arg(short, long, value_delimiter = ',', env = "RS_CLIP_AUTH_KEYS")]
     pub auth_keys: Option<Vec<String>>,
 
@@ -41,12 +44,12 @@ pub(crate) struct Cli {
     pub config: Option<PathBuf>,
 
     /// Server host address (e.g., 127.0.0.1 or example.com).
-    /// Can be set via the RS_CLIP_SERVER_HOST environment variable.
+    /// Can be set via the `RS_CLIP_SERVER_HOST` environment variable.
     #[arg(short = 'H', long, env = "RS_CLIP_SERVER_HOST", default_value = "127.0.0.1")]
     pub host: Option<String>,
 
     /// Server port number.
-    /// Can be set via the RS_CLIP_SERVER_PORT environment variable.
+    /// Can be set via the `RS_CLIP_SERVER_PORT` environment variable.
     #[arg(short, long, env = "RS_CLIP_SERVER_PORT", default_value = "8000")]
     pub port: Option<u16>,
 }
@@ -62,10 +65,10 @@ pub(crate) enum Commands {
 }
 
 pub(crate) fn run_generate_config_template(output: Option<PathBuf>) -> Result<()> {
-    let content = template::<ServerConfig>(Default::default());
+    let content = template::<ServerConfig>(FormatOptions::default());
     match output {
         Some(path) => {
-            write(&path, &content).with_context(|| format!("Failed to write config template to {}", path.display()))?
+            write(&path, &content).with_context(|| format!("Failed to write config template to {}", path.display()))?;
         },
         None => stdout().lock().write_all(content.as_bytes())?,
     }
