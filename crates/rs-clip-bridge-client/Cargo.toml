@@ -79,14 +79,14 @@ rustls-ring = [
 anyhow = "1.0.104"
 arboard = "3.6.1"
 chacha20poly1305 = "0.11.0"
-clap = { version = "4.6.4", features = ["derive", "env"] }
+clap = { version = "4.6.6", features = ["derive", "env"] }
 clipboard-master = "4.0.0"
 confique = { version = "0.4.0", features = ["toml"] }
 hex = "0.4.3"
-kikiutils = { version = "0.11.2", features = ["logger", "signal", "task"] }
+kikiutils = { version = "0.11.3", features = ["logger", "signal", "task"] }
 postcard = { version = "1.1.3", features = ["alloc", "use-std"], default-features = false }
 rand = "0.10.2"
-rustls = { version = "0.23.42", default-features = false }
+rustls = { version = "0.23.43", default-features = false }
 serde = { version = "1.0.229", features = ["derive"] }
 tokio = { version = "1.53.1", features = ["rt-multi-thread"] }
 tokio-util = "0.7.19"
