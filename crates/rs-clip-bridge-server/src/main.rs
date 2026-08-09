@@ -17,6 +17,7 @@ use axum::{
     Router,
     http::StatusCode,
     routing::get,
+    serve,
 };
 use clap::Parser;
 use confique::Config;
@@ -136,7 +137,7 @@ async fn run_server(cancel: CancellationToken) -> Result<()> {
         listener.local_addr().context("Failed to get local address")?
     );
 
-    axum::serve(listener, app)
+    serve(listener, app)
         .with_graceful_shutdown(async move { cancel.cancelled().await })
         .await
         .context("Server error")?;
@@ -165,7 +166,7 @@ fn shutdown() {
 #[tokio::main]
 async fn main() -> Result<()> {
     // --- Init ---
-    init_logger(LoggerInitOptions::default())?;
+    let _logger_guard = init_logger(LoggerInitOptions::default())?;
     tracing::info!(version = VERSION, "Starting rs-clip-bridge-server");
 
     // --- Setup ---
@@ -173,7 +174,8 @@ async fn main() -> Result<()> {
 
     // --- Runtime: spawn tasks ---
     APP_TASK_MANAGER.spawn_with_token(|token| async {
-        if run_server(token).await.is_err() {
+        if let Err(error) = run_server(token).await {
+            tracing::error!(%error, "Server task failed");
             shutdown();
         }
     });

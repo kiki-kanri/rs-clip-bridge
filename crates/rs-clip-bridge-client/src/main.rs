@@ -258,7 +258,7 @@ const VERSION: &str = concat!(env!("CARGO_PKG_VERSION"));
 #[tokio::main]
 async fn main() -> Result<()> {
     // --- Init ---
-    init_logger(LoggerInitOptions::default())?;
+    let _logger_guard = init_logger(LoggerInitOptions::default())?;
     init_rustls_crypto_provider()?;
     tracing::info!(version = VERSION, "Starting rs-clip-bridge-client");
 
