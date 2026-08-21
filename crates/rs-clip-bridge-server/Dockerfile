@@ -71,12 +71,11 @@ RUN \
     ### Add user
     useradd -mr -g nogroup -s /usr/sbin/nologin -u 10001 user
 
-## Copy files and libraries
-COPY --from=build-stage /app/rs-clip-bridge-server ./
-
 ## Copy and set the entrypoint script
-COPY --chmod=700 ./crates/rs-clip-bridge-server/docker-entrypoint.sh ./
-RUN chown -R 10001:nogroup /app
+COPY --chmod=700 --chown=10001:nogroup ./crates/rs-clip-bridge-server/docker-entrypoint.sh ./
 USER 10001
 ENTRYPOINT ["tini", "--"]
 CMD ["./docker-entrypoint.sh"]
+
+## Copy files and libraries
+COPY --chmod=700 --chown=10001:nogroup --from=build-stage /app/rs-clip-bridge-server ./
