@@ -18,6 +18,7 @@ target/
 ### Other ###
 
 # Local AI agent and code-indexing files
+.omo/
 .omx/
 .codegraph/
 .aider*
