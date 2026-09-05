@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.2.2 - 2026-09-05T11:41:28Z
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.2.1...rs-clip-bridge-server-v0.2.2)
+
+### 🏡 Chore
+
+- lint code ([23f7980](https://github.com/kiki-kanri/rs-clip-bridge/commit/23f798084a7c370bbbb4da54ff65710acc6a4588))
+- upgrade deps ([a81e832](https://github.com/kiki-kanri/rs-clip-bridge/commit/a81e832db89b4241e7b511c4c8835ad8026f7b59))
+- upgrade deps ([2f105b4](https://github.com/kiki-kanri/rs-clip-bridge/commit/2f105b41928b7e42f6215f87f2c92761a8f3df92))
+- upgrade deps ([cfd1192](https://github.com/kiki-kanri/rs-clip-bridge/commit/cfd1192fea34a6cf2c45de92f2879f81a743c671))
+
+### 📦 Build
+
+- *(docker)* optimize file ownership handling ([5f74174](https://github.com/kiki-kanri/rs-clip-bridge/commit/5f7417403562efad8a058cb88759f158471dd80a))
+
+### 🩹 Fixes
+
+- restore runtime logging ([b246a60](https://github.com/kiki-kanri/rs-clip-bridge/commit/b246a60843dcfd454ea05e645868687a8b0b44ac))
+- resolve lint warnings ([bcce5a2](https://github.com/kiki-kanri/rs-clip-bridge/commit/bcce5a2bce638d740dec52120ee56c0a66b10c11))
+
 ## 0.2.1 - 2026-07-17T03:41:31Z
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.2.0...rs-clip-bridge-server-v0.2.1)
