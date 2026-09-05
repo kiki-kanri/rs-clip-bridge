@@ -140,7 +140,7 @@ mod tests {
 
         let (nonce, ciphertext) = encrypt(&key, plaintext).unwrap();
         assert_eq!(nonce.len(), 12);
-        assert!(!ciphertext.is_empty());
+        assert_ne!(ciphertext, [] as [u8; 0]);
 
         let decrypted = decrypt(&key, &nonce, &ciphertext).unwrap();
         assert_eq!(decrypted, plaintext);

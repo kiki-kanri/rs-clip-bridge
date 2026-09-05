@@ -57,6 +57,6 @@ mod tests {
             .load()
             .unwrap();
 
-        assert!(config.auth_keys.is_empty());
+        assert_eq!(config.auth_keys, [] as [std::string::String; 0]);
     }
 }
