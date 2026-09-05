@@ -14,7 +14,7 @@ wait
 docker buildx build \
     -f ./crates/rs-clip-bridge-server/Dockerfile \
     -t 'kikikanri/rs-clip-bridge-server:latest' \
-    --builder multi-platform \
+    --builder multi-platforms \
     --no-cache \
     --platform "${PLATFORMS}" \
     --push \

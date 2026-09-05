@@ -76,7 +76,7 @@ kikiutils = { version = "0.11.3", features = ["logger", "signal", "task"] }
 tokio = { version = "1.53.1", features = ["rt-multi-thread"] }
 tokio-util = "0.7.19"
 tracing = "0.1.44"
-wsio-server = { version = "0.12.8", features = ["connection-extensions", "tower", "packet-codec-postcard"] }
+wsio-server = { version = "0.13.0", features = ["connection-extensions", "tower", "packet-codec-postcard"] }
 
 # -----------------------------------------------------------------------------
 # OS / family-specific dependencies
