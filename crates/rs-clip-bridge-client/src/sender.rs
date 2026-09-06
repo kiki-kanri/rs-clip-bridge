@@ -39,6 +39,7 @@ pub(crate) async fn run_clipboard_sender(mut rx: UnboundedReceiver<ClipboardCont
 
     loop {
         select! {
+            biased;
             () = APP_SHUTDOWN_TOKEN.cancelled() => break,
             Some(content) = rx.recv() => {
                 if let Err(e) = send_clipboard(&client, key, content).await {
