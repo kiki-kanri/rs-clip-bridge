@@ -141,7 +141,7 @@ mod tests {
                 assert_eq!(height, 1920);
                 assert_eq!(width, 1080);
             },
-            _ => panic!("Expected Image variant"),
+            ClipboardContent::Text(..) | ClipboardContent::Raw(..) => panic!("Expected Image variant"),
         }
     }
 

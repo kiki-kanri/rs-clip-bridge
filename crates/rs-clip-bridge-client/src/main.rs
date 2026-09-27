@@ -163,7 +163,9 @@ fn setup_ws_client(config: ClientConfig) -> Result<WsIoClient> {
         })
         .build();
 
-    WS_IO_CLIENT.set(client.clone()).ok();
+    WS_IO_CLIENT
+        .set(client.clone())
+        .map_err(|_| anyhow!("Failed to set WS_IO_CLIENT"))?;
 
     Ok(client)
 }
@@ -272,7 +274,7 @@ async fn main() -> Result<()> {
 
     // Parse and store encryption key
     let key = parse_key(&config.encrypt_key)?;
-    CRYPTO_KEY.set(key).ok();
+    CRYPTO_KEY.set(key).map_err(|_| anyhow!("Failed to set crypto key"))?;
 
     #[cfg(unix)]
     setup_display(config.display.as_deref());
