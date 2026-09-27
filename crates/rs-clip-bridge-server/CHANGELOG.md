@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.3 - 2026-09-27T10:45:57Z
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.2.2...rs-clip-bridge-server-v0.2.3)
+
+### 🏡 Chore
+
+- upgrade deps ([a0b1998](https://github.com/kiki-kanri/rs-clip-bridge/commit/a0b199808178fc6d44ca004a8bedf6be964b81c3))
+
+### 💅 Refactors
+
+- *(docker)* reorganize server image setup ([7301a69](https://github.com/kiki-kanri/rs-clip-bridge/commit/7301a693e977d33ae8291c9791da224fe5a6631e))
+
 ## 0.2.2 - 2026-09-05T11:41:28Z
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.2.1...rs-clip-bridge-server-v0.2.2)

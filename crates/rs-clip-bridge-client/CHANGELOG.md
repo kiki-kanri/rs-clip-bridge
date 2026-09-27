@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.3 - 2026-09-27T10:45:57Z
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-client-v0.2.2...rs-clip-bridge-client-v0.2.3)
+
+### 🏡 Chore
+
+- upgrade deps ([a0b1998](https://github.com/kiki-kanri/rs-clip-bridge/commit/a0b199808178fc6d44ca004a8bedf6be964b81c3))
+
+### 🩹 Fixes
+
+- handle client initialization errors ([eaa35cd](https://github.com/kiki-kanri/rs-clip-bridge/commit/eaa35cd0289c86cc069c8d43e20ed24f354aa2fa))
+- *(runtime)* prioritize shutdown in select loops ([2c341cd](https://github.com/kiki-kanri/rs-clip-bridge/commit/2c341cd4bc9b4df02b9fd42569b15755876355aa))
+
 ## 0.2.2 - 2026-09-05T11:41:28Z
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-client-v0.2.1...rs-clip-bridge-client-v0.2.2)
