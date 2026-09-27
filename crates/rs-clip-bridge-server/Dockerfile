@@ -1,27 +1,29 @@
 # Build stage
 FROM rust:slim-trixie AS build-stage
 
-## Set args, envs and workdir
-ARG TARGETPLATFORM
-WORKDIR /app
-
-## Upgrade and install packages
+## Upgrade system packages
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends gcc libssl-dev make mold pkg-config
+
+## Configure working directory
+WORKDIR /app
 
 ## Pre-install toolchain using rust-toolchain.toml
 COPY ./rust-toolchain.toml ./
 RUN rustup show
 
-## Copy Cargo config and manifest for dependency caching
+## Copy Cargo configuration and dependency manifests for caching
 COPY ./.cargo ./.cargo
 COPY ./Cargo.lock ./Cargo.toml ./
 COPY ./crates/rs-clip-bridge-client/Cargo.toml ./crates/rs-clip-bridge-client/
 COPY ./crates/rs-clip-bridge-server/Cargo.toml ./crates/rs-clip-bridge-server/
 
-## Prebuild a dummy project to populate compiled dependency cache.
-## Fetch-only is not enough: the later release clippy/build steps can reuse release-profile deps from this layer/cache.
+## Set args
+ARG TARGETPLATFORM
+
+## Prebuild a dummy project to populate the compiled dependency cache
+## Release-mode dependencies are reused by the subsequent lint and build steps
 RUN --mount=type=cache,id=rs-clip-bridge-server-cargo-git,target=/usr/local/cargo/git \
     --mount=type=cache,id=rs-clip-bridge-server-cargo-registry,target=/usr/local/cargo/registry \
     --mount=type=cache,id=rs-clip-bridge-server-target-${TARGETPLATFORM},target=/cargo-target \
@@ -31,9 +33,11 @@ RUN --mount=type=cache,id=rs-clip-bridge-server-cargo-git,target=/usr/local/carg
     CARGO_TARGET_DIR=/cargo-target cargo b -r -p rs-clip-bridge-server --all-features --all-targets --locked && \
     rm -rf ./crates/rs-clip-bridge-server/src
 
-## Copy actual source code and build with lint + format checks
+## Copy application sources and build configuration
 COPY ./rustfmt.toml ./
 COPY ./crates/rs-clip-bridge-server ./crates/rs-clip-bridge-server
+
+## Validate and build the application
 RUN --mount=type=cache,id=rs-clip-bridge-server-cargo-git,target=/usr/local/cargo/git \
     --mount=type=cache,id=rs-clip-bridge-server-cargo-registry,target=/usr/local/cargo/registry \
     --mount=type=cache,id=rs-clip-bridge-server-target-${TARGETPLATFORM},target=/cargo-target \
@@ -52,30 +56,32 @@ LABEL org.opencontainers.image.description="A blazingly fast, cross-platform cli
 LABEL org.opencontainers.image.source="https://github.com/kiki-kanri/rs-clip-bridge"
 LABEL org.opencontainers.image.licenses="MIT"
 
-## Set envs and workdir
-ENV RS_CLIP_SERVER_HOST='0.0.0.0' \
-    RS_CLIP_SERVER_PORT=8000
-
+## Configure working directory
 WORKDIR /app
 
-## Setups
+## Install runtime packages and configure the runtime user
 RUN \
-    ### Upgrade and install packages
+    ### Upgrade system packages and install runtime dependencies
     apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends tini && \
-    ### Cleanup
+    ### Clean package manager metadata
     apt-get autoremove -y --purge && \
     apt-get clean && \
     rm -rf /var/cache/apt/* /var/lib/apt/lists/* && \
-    ### Add user
-    useradd -mr -g nogroup -s /usr/sbin/nologin -u 10001 user
+    ### Create the runtime user and set application ownership
+    useradd -mr -g nogroup -s /usr/sbin/nologin -u 10001 user && \
+    chown 10001:nogroup /app -R
 
-## Copy and set the entrypoint script
+## Copy and configure the entrypoint
 COPY --chmod=700 --chown=10001:nogroup ./crates/rs-clip-bridge-server/docker-entrypoint.sh ./
 USER 10001
 ENTRYPOINT ["tini", "--"]
 CMD ["./docker-entrypoint.sh"]
 
-## Copy files and libraries
-COPY --chmod=700 --chown=10001:nogroup --from=build-stage /app/rs-clip-bridge-server ./
+## Configure remaining runtime defaults
+ENV RS_CLIP_SERVER_HOST='0.0.0.0' \
+    RS_CLIP_SERVER_PORT=8000
+
+## Copy application output and runtime configuration
+COPY --chown=10001:nogroup --from=build-stage /app/rs-clip-bridge-server ./
