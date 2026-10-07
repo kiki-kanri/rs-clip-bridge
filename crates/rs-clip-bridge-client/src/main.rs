@@ -148,18 +148,18 @@ fn load_config() -> Result<ClientConfig> {
 
 fn setup_ws_client(config: ClientConfig) -> Result<WsIoClient> {
     let client = WsIoClient::builder(&config.server_url)?
-        .on_session_close(|_| async {
+        .on_session_close(async |_| {
             tracing::info!("Disconnected from server");
             Ok(())
         })
-        .on_session_ready(|_| async {
+        .on_session_ready(async |_| {
             tracing::info!("Connected to server");
             Ok(())
         })
         .packet_codec(WsIoPacketCodec::Postcard)
         .with_init_handler(move |_, _: Option<()>| {
             let cfg = config.clone();
-            async move { Ok(Some((cfg.auth_key, cfg.channel_id))) }
+            async { Ok(Some((cfg.auth_key, cfg.channel_id))) }
         })
         .build();
 
@@ -291,7 +291,7 @@ async fn main() -> Result<()> {
 
     // --- Runtime: spawn tasks ---
     let ws_client_clone = ws_client.clone();
-    APP_TASK_MANAGER.spawn_with_token(|_| async move {
+    APP_TASK_MANAGER.spawn_with_token(async |_| {
         run_clipboard_sender(rx, ws_client_clone).await;
     });
 

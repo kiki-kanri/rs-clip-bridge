@@ -173,7 +173,7 @@ async fn main() -> Result<()> {
     load_config()?;
 
     // --- Runtime: spawn tasks ---
-    APP_TASK_MANAGER.spawn_with_token(|token| async {
+    APP_TASK_MANAGER.spawn_with_token(async |token| {
         if let Err(error) = run_server(token).await {
             tracing::error!(%error, "Server task failed");
             shutdown();
