@@ -2,14 +2,14 @@ use confique::Config;
 
 #[derive(Clone, Config, Debug)]
 pub(crate) struct ServerConfig {
-    /// List of auth keys
+    /// Accepted authentication keys. Defaults to an empty list, which allows unauthenticated access.
     #[config(default = [])]
     pub auth_keys: Vec<String>,
 
-    /// Server host
+    /// Server bind address.
     pub host: String,
 
-    /// Server port
+    /// Server TCP port.
     pub port: u16,
 }
 

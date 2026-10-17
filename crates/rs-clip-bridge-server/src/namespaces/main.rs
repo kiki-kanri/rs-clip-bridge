@@ -22,10 +22,14 @@ use crate::{
 // Channel ID Extension
 // ================================================================================================
 
-/// Extension stored on each connection to identify its channel
+/// A connection extension identifying its clipboard channel.
 pub(crate) struct ChannelId(pub String);
 
-/// Extract channel ID from a connection's extensions
+/// Returns an owned channel ID from a connection's extensions.
+///
+/// # Errors
+///
+/// Returns an error if the connection has no channel ID extension.
 pub(crate) fn extract_channel_id_from_connection(connection: &Arc<WsIoServerConnection>) -> Result<String> {
     connection
         .extensions()
@@ -94,7 +98,13 @@ async fn on_ready(connection: Arc<WsIoServerConnection>) -> Result<()> {
     Ok(())
 }
 
-/// Handle incoming clipboard event from a client
+/// Relays a client's clipboard event to its channel.
+///
+/// Ignores errors from emitting the event.
+///
+/// # Errors
+///
+/// Returns an error if the connection has no channel ID extension.
 async fn on_event(connection: Arc<WsIoServerConnection>, data: Arc<Vec<u8>>) -> Result<()> {
     let channel_id = extract_channel_id_from_connection(&connection)?;
     let _ = connection.to([&channel_id]).emit("event", Some(data.as_ref())).await;

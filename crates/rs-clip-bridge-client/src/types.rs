@@ -3,7 +3,7 @@ use serde::{
     Serialize,
 };
 
-/// Clipboard content type
+/// Clipboard content serialized with Postcard for synchronization.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub(crate) enum ClipboardContent {
     Image {
@@ -15,10 +15,11 @@ pub(crate) enum ClipboardContent {
     Raw(Vec<u8>),
 }
 
-/// Encryption payload envelope for serialized clipboard content.
+/// A compression envelope for Postcard-serialized [`ClipboardContent`].
 ///
-/// This is serialized with Postcard before encryption. It intentionally replaces
-/// the previous magic-byte framing, so old clients are not wire-compatible.
+/// The envelope is serialized with Postcard before encryption. Its variants contain either the
+/// uncompressed bytes or their zstd-compressed representation. Clients using the previous magic-byte
+/// framing are not wire-compatible.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub(crate) enum ClipboardPayloadEnvelope {
     Uncompressed(Vec<u8>),
@@ -27,25 +28,21 @@ pub(crate) enum ClipboardPayloadEnvelope {
 
 /// Event data sent when clipboard content changes.
 ///
-/// Content is encrypted using ChaCha20-Poly1305.
+/// The event is serialized with Postcard. Only its `content` field is encrypted using ChaCha20-Poly1305.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub(crate) struct ClipboardEventData {
-    /// Optional device name that originated this event
+    /// The optional name of the device that originated this event.
     pub device_name: Option<String>,
 
-    /// Encrypted `ClipboardPayloadEnvelope`: `[ciphertext || poly1305_tag]`
+    /// The encrypted, Postcard-serialized [`ClipboardPayloadEnvelope`], followed by a 16-byte Poly1305 tag.
     pub content: Vec<u8>,
 
-    /// ChaCha20-Poly1305 nonce (12 bytes)
+    /// The 12-byte ChaCha20-Poly1305 nonce.
     pub nonce: Vec<u8>,
 
-    /// Unix timestamp in milliseconds
+    /// The Unix timestamp in milliseconds.
     pub timestamp: u64,
 }
-
-// ================================================================================================
-// Tests
-// ================================================================================================
 
 #[cfg(test)]
 mod tests {

@@ -31,34 +31,31 @@ use crate::config::ServerConfig;
                   Supports text and image clipboard sync, with server-side grouping via auth keys."
 )]
 pub(crate) struct Cli {
-    /// Authentication keys for server access (multiple allowed).
-    /// Can be set via the `RS_CLIP_AUTH_KEYS` environment variable.
+    /// Comma-separated authentication keys for server access. Allows unauthenticated access when none are configured.
     #[arg(short, long, value_delimiter = ',', env = "RS_CLIP_AUTH_KEYS")]
     pub auth_keys: Option<Vec<String>>,
 
     #[command(subcommand)]
     pub command: Option<Commands>,
 
-    /// Path to the configuration file (TOML format).
+    /// Path to the TOML configuration file.
     #[arg(short, long, value_name = "FILE", env = "RS_CLIP_SERVER_CONFIG")]
     pub config: Option<PathBuf>,
 
-    /// Server host address (e.g., 127.0.0.1 or example.com).
-    /// Can be set via the `RS_CLIP_SERVER_HOST` environment variable.
+    /// Server bind address, for example `127.0.0.1` or `0.0.0.0`. Defaults to `127.0.0.1`.
     #[arg(short = 'H', long, env = "RS_CLIP_SERVER_HOST", default_value = "127.0.0.1")]
     pub host: Option<String>,
 
-    /// Server port number.
-    /// Can be set via the `RS_CLIP_SERVER_PORT` environment variable.
+    /// Server TCP port. Defaults to 8000.
     #[arg(short, long, env = "RS_CLIP_SERVER_PORT", default_value = "8000")]
     pub port: Option<u16>,
 }
 
 #[derive(Subcommand)]
 pub(crate) enum Commands {
-    /// Generate a configuration file template
+    /// Generates a TOML configuration file template.
     GenerateConfigTemplate {
-        /// Output path (default: stdout)
+        /// Output file path. Writes to standard output when omitted.
         #[arg(short, long, value_name = "FILE")]
         output: Option<PathBuf>,
     },

@@ -1,6 +1,6 @@
-//! E2E Encryption using ChaCha20-Poly1305
+//! End-to-end encryption with ChaCha20-Poly1305 and zstd compression.
 //!
-//! The `encrypt_key` is a 64-character hex string (32 bytes).
+//! The configured encryption key is a 64-character hexadecimal string (32 bytes).
 //! A random 12-byte nonce is generated for each encryption.
 
 use std::{
@@ -30,7 +30,11 @@ use zstd::stream::{
     decode_all,
 };
 
-/// Parse a 64-char hex string into a 32-byte key
+/// Parses a 64-character hexadecimal string into a 32-byte key.
+///
+/// # Errors
+///
+/// Returns an error if `hex_key` is not exactly 64 bytes long or contains invalid hexadecimal characters.
 pub(crate) fn parse_key(hex_key: &str) -> Result<Key> {
     if hex_key.len() != 64 {
         return Err(anyhow!("encrypt_key must be 64 hex characters (32 bytes)"));
@@ -41,8 +45,13 @@ pub(crate) fn parse_key(hex_key: &str) -> Result<Key> {
     Ok(key)
 }
 
-/// Encrypt plaintext with ChaCha20-Poly1305.
-/// Returns (nonce, `content_with_tag`) — content is ciphertext || `poly1305_tag`.
+/// Encrypts plaintext with ChaCha20-Poly1305.
+///
+/// Returns a random 12-byte nonce and the ciphertext followed by a 16-byte Poly1305 tag.
+///
+/// # Errors
+///
+/// Returns an error if ChaCha20-Poly1305 encryption fails.
 pub(crate) fn encrypt(key: &Key, plaintext: &[u8]) -> Result<(Vec<u8>, Vec<u8>)> {
     let cipher = ChaCha20Poly1305::new(key);
 
@@ -57,7 +66,14 @@ pub(crate) fn encrypt(key: &Key, plaintext: &[u8]) -> Result<(Vec<u8>, Vec<u8>)>
     Ok((nonce_bytes.to_vec(), content_with_tag))
 }
 
-/// Decrypt `content_with_tag` (ciphertext || `poly1305_tag`) using ChaCha20-Poly1305.
+/// Decrypts authenticated ciphertext with ChaCha20-Poly1305.
+///
+/// The `content_with_tag` input contains the ciphertext followed by its 16-byte Poly1305 tag.
+///
+/// # Errors
+///
+/// Returns an error if `nonce` is not 12 bytes long or authentication fails, including when the key,
+/// nonce, ciphertext, or tag does not match.
 pub(crate) fn decrypt(key: &Key, nonce: &[u8], content_with_tag: &[u8]) -> Result<Vec<u8>> {
     let cipher = ChaCha20Poly1305::new(key);
 
@@ -72,8 +88,11 @@ pub(crate) fn decrypt(key: &Key, nonce: &[u8], content_with_tag: &[u8]) -> Resul
         .map_err(|e| anyhow!("Decryption failed: {e}"))
 }
 
-/// Compress data using zstd with multi-threading (zstdmt).
-/// Uses level 1 (fast) for near-lz4 speed with better compression.
+/// Compresses data with zstd at compression level 1 using multiple workers.
+///
+/// # Errors
+///
+/// Returns an error if initializing, configuring, writing to, or finishing the zstd encoder fails.
 pub(crate) fn compress(data: &[u8]) -> Result<Vec<u8>> {
     let workers = available_parallelism().map_or(1, NonZero::get);
     let workers = u32::try_from(workers).unwrap_or(u32::MAX);
@@ -87,14 +106,14 @@ pub(crate) fn compress(data: &[u8]) -> Result<Vec<u8>> {
     Ok(result)
 }
 
-/// Decompress zstd-compressed data.
+/// Decompresses zstd-compressed data.
+///
+/// # Errors
+///
+/// Returns an error if the zstd decoder cannot decode `data`.
 pub(crate) fn decompress(data: &[u8]) -> Result<Vec<u8>> {
     decode_all(data).map_err(|e| anyhow!("Decompression failed: {e}"))
 }
-
-// ================================================================================================
-// Tests
-// ================================================================================================
 
 #[cfg(test)]
 mod tests {

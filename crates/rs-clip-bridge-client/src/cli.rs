@@ -30,48 +30,48 @@ use crate::config::ClientConfig;
     long_about = "A client that monitors local clipboard changes and synchronizes them with a remote server via WebSockets. All clipboard data is encrypted using ChaCha20-Poly1305."
 )]
 pub(crate) struct Cli {
-    /// Authentication key for server access (optional)
+    /// Optional authentication key for server access.
     #[arg(short, long, env = "RS_CLIP_AUTH_KEY")]
     pub auth_key: Option<String>,
 
-    /// Channel ID for clipboard isolation (required)
+    /// Channel ID for clipboard isolation, required unless provided in the configuration file.
     #[arg(long, env = "RS_CLIP_CHANNEL_ID")]
     pub channel_id: Option<String>,
 
     #[command(subcommand)]
     pub command: Option<Commands>,
 
-    /// Path to the configuration file (TOML format)
+    /// Path to the TOML configuration file.
     #[arg(short, long, value_name = "FILE", env = "RS_CLIP_CLIENT_CONFIG")]
     pub config: Option<PathBuf>,
 
-    /// Linux/X11 display name (e.g., :0). Defaults to $DISPLAY if empty
+    /// X11 display name on Unix, for example `:0`. Leaves `DISPLAY` unchanged when omitted.
     #[cfg(unix)]
     #[arg(short = 'D', long, value_name = "NAME", env = "RS_CLIP_DISPLAY")]
     pub display: Option<String>,
 
-    /// Encryption key for E2E encryption (64 hex chars / 32 bytes, required)
+    /// End-to-end encryption key as 64 hexadecimal characters (32 bytes), required unless configured in the file.
     #[arg(short = 'K', long, env = "RS_CLIP_ENCRYPT_KEY")]
     pub encrypt_key: Option<String>,
 
-    /// Maximum image size in bytes to sync (e.g., 5242880 for 5 MB, default: 10485760 for 10 MB)
+    /// Maximum outgoing image size in uncompressed bytes. Defaults to 10485760 bytes (10 MiB).
     #[arg(long, env = "RS_CLIP_MAX_IMAGE_SIZE_BYTES")]
     pub max_image_size_bytes: Option<usize>,
 
-    /// Minimum size in bytes to trigger compression (default: 1024)
+    /// Minimum serialized clipboard size in bytes to attempt compression. Defaults to 1024 bytes.
     #[arg(long, env = "RS_CLIP_MIN_COMPRESS_SIZE_BYTES")]
     pub min_compress_size_bytes: Option<usize>,
 
-    /// WebSocket server URL (e.g., <ws://127.0.0.1:8080> or <wss://example.com>)
+    /// WebSocket server URL, for example `ws://127.0.0.1:8080` or `wss://example.com`.
     #[arg(short, long, value_name = "URL", env = "RS_CLIP_SERVER_URL")]
     pub server_url: Option<String>,
 }
 
 #[derive(Subcommand)]
 pub(crate) enum Commands {
-    /// Generate a configuration file template
+    /// Generates a TOML configuration file template.
     GenerateConfigTemplate {
-        /// Output path (default: stdout)
+        /// Output file path. Writes to standard output when omitted.
         #[arg(short, long, value_name = "FILE")]
         output: Option<PathBuf>,
     },
