@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.4 - 2026-10-17T03:29:05Z
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.2.3...rs-clip-bridge-server-v0.2.4)
+
+### 🏡 Chore
+
+- upgrade deps ([ea88889](https://github.com/kiki-kanri/rs-clip-bridge/commit/ea888891d762af14ae30291a6ecf09a27b5b96af))
+- upgrade deps ([7f8c07a](https://github.com/kiki-kanri/rs-clip-bridge/commit/7f8c07ab462745673f78a559b45c142b6ab7e4d2))
+
+### 💅 Refactors
+
+- adopt async closures in client callbacks and runtime tasks ([886e983](https://github.com/kiki-kanri/rs-clip-bridge/commit/886e9837d1f2af79db4cc344e485c1e5f7481886))
+
+### 📖 Documentation
+
+- standardize Rustdoc across client and server crates ([ba1ae83](https://github.com/kiki-kanri/rs-clip-bridge/commit/ba1ae8357672d72f52da5e573fbbd1d9642a4eff))
+
 ## 0.2.3 - 2026-09-27T10:45:57Z
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.2.2...rs-clip-bridge-server-v0.2.3)
