@@ -1614,7 +1614,7 @@ dependencies = [
 
 [[package]]
 name = "rs-clip-bridge-client"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "anyhow",
  "arboard",
@@ -1637,7 +1637,7 @@ dependencies = [
 
 [[package]]
 name = "rs-clip-bridge-server"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "anyhow",
  "axum",

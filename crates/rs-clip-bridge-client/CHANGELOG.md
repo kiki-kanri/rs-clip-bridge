@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.5 - 2026-10-20T09:57:30Z
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-client-v0.2.4...rs-clip-bridge-client-v0.2.5)
+
+### 🏡 Chore
+
+- lint code ([cdddbb5](https://github.com/kiki-kanri/rs-clip-bridge/commit/cdddbb5ccb0a03868833538e1a9bb17e027d87a5))
+- upgrade deps ([e9f93f0](https://github.com/kiki-kanri/rs-clip-bridge/commit/e9f93f0226ffa7c08b5efc823f9bb6de1f240c19))
+
 ## 0.2.4 - 2026-10-17T03:29:05Z
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-client-v0.2.3...rs-clip-bridge-client-v0.2.4)
