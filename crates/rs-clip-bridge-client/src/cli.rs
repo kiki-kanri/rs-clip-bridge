@@ -105,6 +105,7 @@ mod tests {
             &"0".repeat(64),
         ])
         .unwrap();
+
         assert_eq!(cli.channel_id, Some("test-channel".into()));
         assert_eq!(cli.server_url, Some("ws://localhost:8080".into()));
         assert_eq!(cli.encrypt_key, Some("0".repeat(64)));
@@ -128,6 +129,7 @@ mod tests {
             "2048",
         ])
         .unwrap();
+
         assert_eq!(cli.auth_key, Some("my-secret-key".into()));
         assert_eq!(cli.max_image_size_bytes, Some(5_242_880));
         assert_eq!(cli.min_compress_size_bytes, Some(2048));

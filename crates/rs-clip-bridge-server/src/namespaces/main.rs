@@ -122,7 +122,7 @@ mod tests {
 
     #[test]
     fn configured_auth_keys_require_matching_auth_key() {
-        let auth_keys = vec!["secret".to_string()];
+        let auth_keys = vec!["secret".to_owned()];
 
         assert!(is_authorized(&auth_keys, Some("secret")));
         assert!(!is_authorized(&auth_keys, Some("wrong")));

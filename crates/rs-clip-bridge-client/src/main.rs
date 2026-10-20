@@ -244,6 +244,7 @@ async fn run_signal_handler() {
         _ = wait_for_shutdown_signal() => {},
         () = APP_SHUTDOWN_TOKEN.cancelled() => {},
     }
+
     shutdown();
 }
 
@@ -313,8 +314,10 @@ async fn main() -> Result<()> {
 mod tests {
     use postcard::to_allocvec;
 
-    use super::*;
-    use crate::crypto::compress;
+    use crate::{
+        crypto::compress,
+        *,
+    };
 
     #[test]
     fn client_config_default_max_image_size() {

@@ -4,7 +4,7 @@ use serde::{
 };
 
 /// Clipboard content serialized with Postcard for synchronization.
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub(crate) enum ClipboardContent {
     Image {
         bytes: Vec<u8>,
@@ -20,7 +20,7 @@ pub(crate) enum ClipboardContent {
 /// The envelope is serialized with Postcard before encryption. Its variants contain either the
 /// uncompressed bytes or their zstd-compressed representation. Clients using the previous magic-byte
 /// framing are not wire-compatible.
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub(crate) enum ClipboardPayloadEnvelope {
     Uncompressed(Vec<u8>),
     Zstd(Vec<u8>),
@@ -29,7 +29,7 @@ pub(crate) enum ClipboardPayloadEnvelope {
 /// Event data sent when clipboard content changes.
 ///
 /// The event is serialized with Postcard. Only its `content` field is encrypted using ChaCha20-Poly1305.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct ClipboardEventData {
     /// The optional name of the device that originated this event.
     pub device_name: Option<String>,
@@ -56,7 +56,7 @@ mod tests {
     #[test]
     fn clipboard_event_data_serde() {
         let data = ClipboardEventData {
-            device_name: Some("test-device".to_string()),
+            device_name: Some("test-device".to_owned()),
             content: vec![0xde, 0xad, 0xbe, 0xef],
             nonce: vec![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c],
             timestamp: 1_234_567_890,
@@ -72,7 +72,7 @@ mod tests {
 
     #[test]
     fn clipboard_content_serde() {
-        let content = ClipboardContent::Text("Hello, World!".to_string());
+        let content = ClipboardContent::Text("Hello, World!".to_owned());
         let encoded = to_allocvec(&content).unwrap();
         let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
         assert_eq!(decoded, content);
@@ -153,7 +153,7 @@ mod tests {
         ];
 
         for text in texts {
-            let content = ClipboardContent::Text(text.to_string());
+            let content = ClipboardContent::Text(text.to_owned());
             let encoded = to_allocvec(&content).unwrap();
             let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
             assert_eq!(decoded, content);
