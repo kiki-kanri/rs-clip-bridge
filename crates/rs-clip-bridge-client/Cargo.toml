@@ -80,7 +80,7 @@ anyhow = "1.0.104"
 arboard = "3.7.0"
 chacha20poly1305 = "0.11.0"
 clap = { version = "4.6.7", features = ["derive", "env"] }
-clipboard-master = "4.0.0"
+clipboard-master = "4.1.0"
 confique = { version = "0.4.0", features = ["toml"] }
 hex = "0.4.3"
 kikiutils = { version = "0.13.0", features = ["logger", "signal", "task"] }
@@ -88,10 +88,10 @@ postcard = { version = "1.1.3", features = ["alloc", "use-std"], default-feature
 rand = "0.10.3"
 rustls = { version = "0.23.46", default-features = false }
 serde = { version = "1.0.229", features = ["derive"] }
-tokio = { version = "1.54.0", features = ["rt-multi-thread"] }
+tokio = { version = "1.54.1", features = ["rt-multi-thread"] }
 tokio-util = "0.7.20"
 tracing = "0.1.44"
-wsio-client = { version = "0.9.3", features = ["packet-codec-postcard"] }
+wsio-client = { version = "0.10.1", features = ["packet-codec-postcard"] }
 zstd = { version = "0.14.3", features = ["zstdmt"] }
 
 # -----------------------------------------------------------------------------
