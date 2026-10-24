@@ -161,7 +161,7 @@ fn setup_ws_client(config: ClientConfig) -> Result<WsIoClient> {
             let cfg = config.clone();
             async { Ok(Some((cfg.auth_key, cfg.channel_id))) }
         })
-        .build();
+        .build()?;
 
     WS_IO_CLIENT
         .set(client.clone())

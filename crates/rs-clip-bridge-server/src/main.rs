@@ -63,8 +63,13 @@ use self::{
 static APP_SHUTDOWN_TOKEN: LazyLock<CancellationToken> = LazyLock::new(CancellationToken::new);
 static APP_TASK_MANAGER: LazyLock<TaskManager> = LazyLock::new(TaskManager::new);
 static SERVER_CONFIG: OnceLock<ServerConfig> = OnceLock::new();
-pub static WS_IO_SERVER: LazyLock<WsIoServer> =
-    LazyLock::new(|| WsIoServer::builder().packet_codec(WsIoPacketCodec::Postcard).build());
+pub static WS_IO_SERVER: LazyLock<WsIoServer> = LazyLock::new(|| {
+    #[allow(clippy::unwrap_used)]
+    WsIoServer::builder()
+        .packet_codec(WsIoPacketCodec::Postcard)
+        .build()
+        .unwrap()
+});
 
 // ================================================================================================
 // Initialization
