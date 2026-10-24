@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.6 - 2026-10-24T11:16:04Z
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-client-v0.2.5...rs-clip-bridge-client-v0.2.6)
+
+### 🏡 Chore
+
+- update wsio related usage ([8f46996](https://github.com/kiki-kanri/rs-clip-bridge/commit/8f46996d5c916dc264a60574fed6a70b7a8874a2))
+- upgrade deps ([27fa24f](https://github.com/kiki-kanri/rs-clip-bridge/commit/27fa24f0302b09a162d63229d520cce9d756597f))
+
 ## 0.2.5 - 2026-10-20T09:57:30Z
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-client-v0.2.4...rs-clip-bridge-client-v0.2.5)
