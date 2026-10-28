@@ -72,11 +72,11 @@ anyhow = "1.0.104"
 axum = "0.8.9"
 clap = { version = "4.6.7", features = ["derive", "env"] }
 confique = { version = "0.4.0", features = ["toml"] }
-kikiutils = { version = "0.13.0", features = ["logger", "signal", "task"] }
+kikiutils = { version = "0.13.2", features = ["logger", "signal", "task"] }
 tokio = { version = "1.54.1", features = ["rt-multi-thread"] }
 tokio-util = "0.7.20"
 tracing = "0.1.44"
-wsio-server = { version = "0.15.2", features = ["connection-extensions", "tower", "packet-codec-postcard"] }
+wsio-server = { version = "0.16.0", features = ["connection-extensions", "tower", "packet-codec-postcard"] }
 
 # -----------------------------------------------------------------------------
 # OS / family-specific dependencies
