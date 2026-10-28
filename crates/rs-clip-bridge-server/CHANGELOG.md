@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.7 - 2026-10-28T13:17:06Z
+
+[compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.2.6...rs-clip-bridge-server-v0.2.7)
+
+### 🏡 Chore
+
+- upgrade deps ([07113ce](https://github.com/kiki-kanri/rs-clip-bridge/commit/07113ce91a9be7fbb1abe968b047e7d57d19989c))
+
 ## 0.2.6 - 2026-10-24T11:16:04Z
 
 [compare changes](https://github.com/kiki-kanri/rs-clip-bridge/compare/rs-clip-bridge-server-v0.2.5...rs-clip-bridge-server-v0.2.6)
