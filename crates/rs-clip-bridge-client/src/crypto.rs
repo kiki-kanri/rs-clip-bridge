@@ -2,11 +2,10 @@
 //!
 //! The configured encryption key is a 64-character hexadecimal string (32 bytes).
 //! A random 12-byte nonce is generated for each encryption.
-
 use std::{
-    io::copy,
+    io,
     num::NonZero,
-    thread::available_parallelism,
+    thread,
 };
 
 use anyhow::{
@@ -23,7 +22,6 @@ use chacha20poly1305::{
         KeyInit,
     },
 };
-use hex::decode_to_slice;
 use rand::random;
 use zstd::stream::{
     Encoder,
@@ -41,7 +39,7 @@ pub(crate) fn parse_key(hex_key: &str) -> Result<Key> {
     }
 
     let mut key = Key::default();
-    decode_to_slice(hex_key.as_bytes(), &mut key)?;
+    hex::decode_to_slice(hex_key.as_bytes(), &mut key)?;
     Ok(key)
 }
 
@@ -94,13 +92,13 @@ pub(crate) fn decrypt(key: &Key, nonce: &[u8], content_with_tag: &[u8]) -> Resul
 ///
 /// Returns an error if initializing, configuring, writing to, or finishing the zstd encoder fails.
 pub(crate) fn compress(data: &[u8]) -> Result<Vec<u8>> {
-    let workers = available_parallelism().map_or(1, NonZero::get);
+    let workers = thread::available_parallelism().map_or(1, NonZero::get);
     let workers = u32::try_from(workers).unwrap_or(u32::MAX);
     let mut result = Vec::new();
 
     let mut encoder = Encoder::new(&mut result, 1)?;
     encoder.multithread(workers)?;
-    copy(&mut &data[..], &mut encoder)?;
+    io::copy(&mut &data[..], &mut encoder)?;
     encoder.finish()?;
 
     Ok(result)

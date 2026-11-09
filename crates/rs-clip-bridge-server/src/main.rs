@@ -1,7 +1,6 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
-
 use std::{
-    process::exit,
+    process,
     sync::{
         LazyLock,
         OnceLock,
@@ -85,7 +84,7 @@ fn load_config() -> Result<ServerConfig> {
         match cmd {
             Commands::GenerateConfigTemplate { output } => {
                 run_generate_config_template(output)?;
-                exit(0);
+                process::exit(0);
             },
         }
     }

@@ -1,6 +1,6 @@
 use std::{
-    io::Error as IoError,
-    thread::spawn,
+    io,
+    thread,
 };
 
 use anyhow::{
@@ -14,7 +14,6 @@ use clipboard_master::{
     ClipboardHandler,
     Master,
 };
-use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
     shutdown,
@@ -26,7 +25,7 @@ struct ClipboardMonitor {
     last_image: Option<(Vec<u8>, usize, usize)>, // (bytes, height, width)
     last_text: String,
     max_image_size_bytes: usize,
-    tx: UnboundedSender<ClipboardContent>,
+    tx: tokio::sync::mpsc::UnboundedSender<ClipboardContent>,
 }
 
 impl ClipboardHandler for ClipboardMonitor {
@@ -47,14 +46,17 @@ impl ClipboardHandler for ClipboardMonitor {
         }
     }
 
-    fn on_clipboard_error(&mut self, error: IoError) -> CallbackResult {
+    fn on_clipboard_error(&mut self, error: io::Error) -> CallbackResult {
         tracing::error!("Clipboard monitor error: {error}");
         CallbackResult::Next
     }
 }
 
 impl ClipboardMonitor {
-    pub(crate) fn new(tx: UnboundedSender<ClipboardContent>, max_image_size_bytes: usize) -> Result<Self> {
+    pub(crate) fn new(
+        tx: tokio::sync::mpsc::UnboundedSender<ClipboardContent>,
+        max_image_size_bytes: usize,
+    ) -> Result<Self> {
         Ok(Self {
             ctx: Clipboard::new().map_err(|e| anyhow!("Clipboard init error: {e}"))?,
             last_text: String::new(),
@@ -116,8 +118,11 @@ impl ClipboardMonitor {
     }
 }
 
-pub(crate) fn spawn_clipboard_monitor(tx: UnboundedSender<ClipboardContent>, max_image_size_bytes: usize) {
-    spawn(move || {
+pub(crate) fn spawn_clipboard_monitor(
+    tx: tokio::sync::mpsc::UnboundedSender<ClipboardContent>,
+    max_image_size_bytes: usize,
+) {
+    thread::spawn(move || {
         if let Err(e) = (|| -> Result<()> {
             let monitor = ClipboardMonitor::new(tx, max_image_size_bytes)?;
             Master::new(monitor).context("Master init failed")?.run()?;

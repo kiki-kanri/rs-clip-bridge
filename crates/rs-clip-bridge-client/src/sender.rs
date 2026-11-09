@@ -8,11 +8,7 @@ use anyhow::{
     Result,
     anyhow,
 };
-use postcard::to_allocvec;
-use tokio::{
-    select,
-    sync::mpsc::UnboundedReceiver,
-};
+use tokio::select;
 use wsio_client::WsIoClient;
 
 use crate::{
@@ -31,7 +27,10 @@ use crate::{
     },
 };
 
-pub(crate) async fn run_clipboard_sender(mut rx: UnboundedReceiver<ClipboardContent>, client: WsIoClient) {
+pub(crate) async fn run_clipboard_sender(
+    mut rx: tokio::sync::mpsc::UnboundedReceiver<ClipboardContent>,
+    client: WsIoClient,
+) {
     let Some(key) = CRYPTO_KEY.get() else {
         tracing::error!("Crypto key not initialized");
         return;
@@ -65,7 +64,7 @@ fn build_payload_envelope(serialized: &[u8], min_compress_size_bytes: usize) -> 
 
 async fn send_clipboard(client: &WsIoClient, key: &chacha20poly1305::Key, content: ClipboardContent) -> Result<()> {
     // Serialize ClipboardContent to bytes
-    let serialized = to_allocvec(&content).map_err(|e| anyhow!("Serialize failed: {e}"))?;
+    let serialized = postcard::to_allocvec(&content).map_err(|e| anyhow!("Serialize failed: {e}"))?;
 
     // Skip if content matches LAST_CONTENT_BYTES (circular write prevention)
     if *LAST_CONTENT_BYTES.read().await == serialized {
@@ -80,7 +79,7 @@ async fn send_clipboard(client: &WsIoClient, key: &chacha20poly1305::Key, conten
 
     let envelope = build_payload_envelope(&serialized, min_size)?;
 
-    let to_encrypt = to_allocvec(&envelope).map_err(|e| anyhow!("Serialize payload envelope failed: {e}"))?;
+    let to_encrypt = postcard::to_allocvec(&envelope).map_err(|e| anyhow!("Serialize payload envelope failed: {e}"))?;
 
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -100,7 +99,10 @@ async fn send_clipboard(client: &WsIoClient, key: &chacha20poly1305::Key, conten
     let serialized_size = serialized.len();
     *LAST_CONTENT_BYTES.write().await = serialized;
 
-    match client.emit::<Vec<u8>>("event", Some(&to_allocvec(&event_data)?)).await {
+    match client
+        .emit::<Vec<u8>>("event", Some(&postcard::to_allocvec(&event_data)?))
+        .await
+    {
         Ok(()) => tracing::info!("Sent clipboard: {serialized_size} bytes"),
         Err(e) => tracing::error!("Failed to emit clipboard event: {e}"),
     }

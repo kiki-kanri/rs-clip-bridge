@@ -1,9 +1,7 @@
 use std::{
     fs::write,
-    io::{
-        Write,
-        stdout,
-    },
+    io,
+    io::Write,
     path::PathBuf,
 };
 
@@ -14,10 +12,6 @@ use anyhow::{
 use clap::{
     Parser,
     Subcommand,
-};
-use confique::toml::{
-    FormatOptions,
-    template,
 };
 
 use crate::config::ClientConfig;
@@ -78,12 +72,12 @@ pub(crate) enum Commands {
 }
 
 pub(crate) fn run_generate_config_template(output: Option<PathBuf>) -> Result<()> {
-    let content = template::<ClientConfig>(FormatOptions::default());
+    let content = confique::toml::template::<ClientConfig>(confique::toml::FormatOptions::default());
     match output {
         Some(path) => {
             write(&path, &content).with_context(|| format!("Failed to write config template to {}", path.display()))?;
         },
-        None => stdout().lock().write_all(content.as_bytes())?,
+        None => io::stdout().lock().write_all(content.as_bytes())?,
     }
 
     Ok(())

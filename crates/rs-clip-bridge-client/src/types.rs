@@ -46,10 +46,6 @@ pub(crate) struct ClipboardEventData {
 
 #[cfg(test)]
 mod tests {
-    use postcard::{
-        from_bytes,
-        to_allocvec,
-    };
 
     use super::*;
 
@@ -62,8 +58,8 @@ mod tests {
             timestamp: 1_234_567_890,
         };
 
-        let encoded = to_allocvec(&data).unwrap();
-        let decoded: ClipboardEventData = from_bytes(&encoded).unwrap();
+        let encoded = postcard::to_allocvec(&data).unwrap();
+        let decoded: ClipboardEventData = postcard::from_bytes(&encoded).unwrap();
         assert_eq!(decoded.device_name, data.device_name);
         assert_eq!(decoded.content, data.content);
         assert_eq!(decoded.nonce, data.nonce);
@@ -73,13 +69,13 @@ mod tests {
     #[test]
     fn clipboard_content_serde() {
         let content = ClipboardContent::Text("Hello, World!".to_owned());
-        let encoded = to_allocvec(&content).unwrap();
-        let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
+        let encoded = postcard::to_allocvec(&content).unwrap();
+        let decoded: ClipboardContent = postcard::from_bytes(&encoded).unwrap();
         assert_eq!(decoded, content);
 
         let raw = ClipboardContent::Raw(vec![0xff, 0x00, 0xff]);
-        let encoded = to_allocvec(&raw).unwrap();
-        let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
+        let encoded = postcard::to_allocvec(&raw).unwrap();
+        let decoded: ClipboardContent = postcard::from_bytes(&encoded).unwrap();
         assert_eq!(decoded, raw);
 
         let image = ClipboardContent::Image {
@@ -88,21 +84,21 @@ mod tests {
             width: 1,
         }; // PNG magic
 
-        let encoded = to_allocvec(&image).unwrap();
-        let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
+        let encoded = postcard::to_allocvec(&image).unwrap();
+        let decoded: ClipboardContent = postcard::from_bytes(&encoded).unwrap();
         assert_eq!(decoded, image);
     }
 
     #[test]
     fn clipboard_payload_envelope_serde() {
         let uncompressed = ClipboardPayloadEnvelope::Uncompressed(vec![0x01, 0x02, 0x03]);
-        let encoded = to_allocvec(&uncompressed).unwrap();
-        let decoded: ClipboardPayloadEnvelope = from_bytes(&encoded).unwrap();
+        let encoded = postcard::to_allocvec(&uncompressed).unwrap();
+        let decoded: ClipboardPayloadEnvelope = postcard::from_bytes(&encoded).unwrap();
         assert_eq!(decoded, uncompressed);
 
         let zstd = ClipboardPayloadEnvelope::Zstd(vec![0x28, 0xb5, 0x2f, 0xfd]);
-        let encoded = to_allocvec(&zstd).unwrap();
-        let decoded: ClipboardPayloadEnvelope = from_bytes(&encoded).unwrap();
+        let encoded = postcard::to_allocvec(&zstd).unwrap();
+        let decoded: ClipboardPayloadEnvelope = postcard::from_bytes(&encoded).unwrap();
         assert_eq!(decoded, zstd);
     }
 
@@ -115,8 +111,8 @@ mod tests {
             timestamp: 0,
         };
 
-        let encoded = to_allocvec(&data).unwrap();
-        let decoded: ClipboardEventData = from_bytes(&encoded).unwrap();
+        let encoded = postcard::to_allocvec(&data).unwrap();
+        let decoded: ClipboardEventData = postcard::from_bytes(&encoded).unwrap();
         assert_eq!(decoded.device_name, None);
     }
 
@@ -129,8 +125,8 @@ mod tests {
             width: 1080,
         };
 
-        let encoded = to_allocvec(&image).unwrap();
-        let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
+        let encoded = postcard::to_allocvec(&image).unwrap();
+        let decoded: ClipboardContent = postcard::from_bytes(&encoded).unwrap();
 
         match decoded {
             ClipboardContent::Image { bytes, height, width } => {
@@ -154,8 +150,8 @@ mod tests {
 
         for text in texts {
             let content = ClipboardContent::Text(text.to_owned());
-            let encoded = to_allocvec(&content).unwrap();
-            let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
+            let encoded = postcard::to_allocvec(&content).unwrap();
+            let decoded: ClipboardContent = postcard::from_bytes(&encoded).unwrap();
             assert_eq!(decoded, content);
         }
     }
@@ -163,8 +159,8 @@ mod tests {
     #[test]
     fn clipboard_content_raw_binary() {
         let raw = ClipboardContent::Raw(vec![0x00, 0xff, 0x42, 0x13, 0x37]);
-        let encoded = to_allocvec(&raw).unwrap();
-        let decoded: ClipboardContent = from_bytes(&encoded).unwrap();
+        let encoded = postcard::to_allocvec(&raw).unwrap();
+        let decoded: ClipboardContent = postcard::from_bytes(&encoded).unwrap();
         assert_eq!(decoded, raw);
     }
 
@@ -177,8 +173,8 @@ mod tests {
             timestamp: 0,
         };
 
-        let encoded = to_allocvec(&data).unwrap();
-        let decoded: ClipboardEventData = from_bytes(&encoded).unwrap();
+        let encoded = postcard::to_allocvec(&data).unwrap();
+        let decoded: ClipboardEventData = postcard::from_bytes(&encoded).unwrap();
         assert_eq!(decoded.content.len(), 64);
         assert!(decoded.device_name.is_none());
     }

@@ -1,10 +1,7 @@
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
-
-#[cfg(unix)]
-use std::env::set_var;
 use std::{
     borrow::Cow,
-    process::exit,
+    process,
     sync::{
         Arc,
         LazyLock,
@@ -32,11 +29,7 @@ use kikiutils::{
     signal::wait_for_shutdown_signal,
     task::manager::TaskManager,
 };
-use postcard::from_bytes;
-use tokio::{
-    select,
-    sync::mpsc::unbounded_channel,
-};
+use tokio::select;
 use tokio_util::sync::CancellationToken;
 use wsio_client::{
     WsIoClient,
@@ -115,7 +108,7 @@ fn load_config() -> Result<ClientConfig> {
         match cmd {
             Commands::GenerateConfigTemplate { output } => {
                 run_generate_config_template(output)?;
-                exit(0);
+                process::exit(0);
             },
         }
     }
@@ -172,9 +165,11 @@ fn setup_ws_client(config: ClientConfig) -> Result<WsIoClient> {
 
 #[cfg(unix)]
 fn setup_display(display: Option<&str>) {
+    use std::env;
+
     if let Some(d) = display {
         // SAFETY: safe before async runtime starts
-        unsafe { set_var("DISPLAY", d) };
+        unsafe { env::set_var("DISPLAY", d) };
     }
 }
 
@@ -183,7 +178,7 @@ fn setup_display(display: Option<&str>) {
 // ================================================================================================
 
 fn decode_clipboard_payload(plaintext: &[u8]) -> Result<Vec<u8>> {
-    match from_bytes::<ClipboardPayloadEnvelope>(plaintext).context("Deserialize payload envelope failed")? {
+    match postcard::from_bytes::<ClipboardPayloadEnvelope>(plaintext).context("Deserialize payload envelope failed")? {
         ClipboardPayloadEnvelope::Uncompressed(payload) => Ok(payload),
         ClipboardPayloadEnvelope::Zstd(payload) => decompress(&payload).context("Decompression failed"),
     }
@@ -191,7 +186,7 @@ fn decode_clipboard_payload(plaintext: &[u8]) -> Result<Vec<u8>> {
 
 async fn handle_server_event(_: Arc<WsIoClientSession>, data_bytes: Arc<Vec<u8>>) -> Result<()> {
     let key = CRYPTO_KEY.get().context("Crypto key not initialized")?;
-    let data = from_bytes::<ClipboardEventData>(&data_bytes)?;
+    let data = postcard::from_bytes::<ClipboardEventData>(&data_bytes)?;
 
     // Decrypt content
     let plaintext = decrypt(key, &data.nonce, &data.content).context("Decryption failed")?;
@@ -200,7 +195,7 @@ async fn handle_server_event(_: Arc<WsIoClientSession>, data_bytes: Arc<Vec<u8>>
     let decompressed = decode_clipboard_payload(&plaintext)?;
 
     // Deserialize ClipboardContent
-    let content = from_bytes(&decompressed).context("Deserialize clipboard content failed")?;
+    let content = postcard::from_bytes(&decompressed).context("Deserialize clipboard content failed")?;
 
     // Update LAST_CONTENT_BYTES before writing to local clipboard
     *LAST_CONTENT_BYTES.write().await = decompressed.clone();
@@ -287,7 +282,7 @@ async fn main() -> Result<()> {
     ws_client.connect().await;
 
     // Spawn clipboard monitor
-    let (tx, rx) = unbounded_channel();
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
     spawn_clipboard_monitor(tx, config.max_image_size_bytes);
 
     // --- Runtime: spawn tasks ---
@@ -312,7 +307,6 @@ async fn main() -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use postcard::to_allocvec;
 
     use crate::{
         crypto::compress,
@@ -361,7 +355,7 @@ mod tests {
     fn decode_uncompressed_payload_envelope() {
         let payload = vec![0x00, 0x01, 0x02];
         let envelope = ClipboardPayloadEnvelope::Uncompressed(payload.clone());
-        let encoded = to_allocvec(&envelope).unwrap();
+        let encoded = postcard::to_allocvec(&envelope).unwrap();
 
         assert_eq!(decode_clipboard_payload(&encoded).unwrap(), payload);
     }
@@ -371,7 +365,7 @@ mod tests {
         let payload = b"hello clipboard".to_vec();
         let compressed = compress(&payload).unwrap();
         let envelope = ClipboardPayloadEnvelope::Zstd(compressed);
-        let encoded = to_allocvec(&envelope).unwrap();
+        let encoded = postcard::to_allocvec(&envelope).unwrap();
 
         assert_eq!(decode_clipboard_payload(&encoded).unwrap(), payload);
     }
