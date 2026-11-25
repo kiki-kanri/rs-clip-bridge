@@ -53,7 +53,7 @@ use self::{
     },
     config::{
         ClientConfig,
-        confique_client_config_layer::ClientConfigLayer,
+        ClientConfigLayer,
     },
     crypto::{
         decompress,
@@ -124,7 +124,7 @@ fn load_config() -> Result<ClientConfig> {
         server_url: cli.server_url,
     };
 
-    let mut builder = ClientConfig::builder().preloaded(layer);
+    let mut builder = ClientConfig::builder().layer(layer);
     if let Some(path) = cli.config {
         builder = builder.file(path);
     }
@@ -316,7 +316,7 @@ mod tests {
     #[test]
     fn client_config_default_max_image_size() {
         let config = ClientConfig::builder()
-            .preloaded(ClientConfigLayer {
+            .layer(ClientConfigLayer {
                 auth_key: None,
                 channel_id: Some("test".into()),
                 #[cfg(unix)]
@@ -335,7 +335,7 @@ mod tests {
     #[test]
     fn client_config_default_min_compress_size() {
         let config = ClientConfig::builder()
-            .preloaded(ClientConfigLayer {
+            .layer(ClientConfigLayer {
                 auth_key: None,
                 channel_id: Some("test".into()),
                 #[cfg(unix)]

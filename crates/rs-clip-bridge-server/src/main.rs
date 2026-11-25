@@ -51,7 +51,7 @@ use self::{
     },
     config::{
         ServerConfig,
-        confique_server_config_layer::ServerConfigLayer,
+        ServerConfigLayer,
     },
 };
 
@@ -95,7 +95,7 @@ fn load_config() -> Result<ServerConfig> {
         port: cli.port,
     };
 
-    let mut builder = ServerConfig::builder().preloaded(layer);
+    let mut builder = ServerConfig::builder().layer(layer);
     if let Some(path) = cli.config {
         builder = builder.file(path);
     }

@@ -15,13 +15,12 @@ pub(crate) struct ServerConfig {
 
 #[cfg(test)]
 mod tests {
-    use self::confique_server_config_layer::ServerConfigLayer;
     use super::*;
 
     #[test]
     fn server_config_default_port() {
         let config = ServerConfig::builder()
-            .preloaded(ServerConfigLayer {
+            .layer(ServerConfigLayer {
                 auth_keys: None,
                 host: Some("127.0.0.1".into()),
                 port: Some(8000),
@@ -35,7 +34,7 @@ mod tests {
     #[test]
     fn server_config_default_host() {
         let config = ServerConfig::builder()
-            .preloaded(ServerConfigLayer {
+            .layer(ServerConfigLayer {
                 auth_keys: None,
                 host: Some("0.0.0.0".into()),
                 port: Some(8000),
@@ -49,7 +48,7 @@ mod tests {
     #[test]
     fn server_config_default_auth_keys_empty() {
         let config = ServerConfig::builder()
-            .preloaded(ServerConfigLayer {
+            .layer(ServerConfigLayer {
                 auth_keys: None,
                 host: Some("127.0.0.1".into()),
                 port: Some(8000),
